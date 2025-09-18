@@ -64,8 +64,7 @@ export async function POST(request: Request) {
         source: source,
         status: 'NEW',
         metadata: { notes },
-        createdAt: new Date().toISOString(),
-        updatedAt: new Date().toISOString(),
+        // Let Supabase auto-generate id, createdAt, updatedAt
       })
       .select()
       .single();
