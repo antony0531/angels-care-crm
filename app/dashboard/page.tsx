@@ -30,7 +30,7 @@ export default function DashboardPage() {
     coreWebVitals: 92,
     activeTests: 3,
     uptime: 99.98,
-    revenue: 125400
+    consultationsCompleted: 342
   });
 
   const [recentActivity] = useState([
@@ -38,7 +38,7 @@ export default function DashboardPage() {
     { time: "5 min ago", event: "A/B Test Started", detail: "Homepage CTA Button", type: "test" },
     { time: "12 min ago", event: "Performance Alert", detail: "Page speed improved by 15%", type: "success" },
     { time: "18 min ago", event: "Content Published", detail: "New blog post went live", type: "content" },
-    { time: "25 min ago", event: "Lead Converted", detail: "Sarah Johnson - $2,400", type: "conversion" }
+    { time: "25 min ago", event: "Consultation Completed", detail: "Sarah Johnson - Medicare Review", type: "consultation" }
   ]);
 
   const performanceTrend = Array.from({ length: 7 }, (_, i) => ({
@@ -122,17 +122,17 @@ export default function DashboardPage() {
           </CardContent>
         </Card>
 
-        <Card className="hover:shadow-lg transition-shadow cursor-pointer" onClick={() => navigateToSection('/dashboard/analytics/conversion-funnel')}>
+        <Card className="hover:shadow-lg transition-shadow cursor-pointer" onClick={() => navigateToSection('/dashboard/leads')}>
           <CardHeader className="pb-3">
             <div className="flex items-center justify-between">
-              <CardTitle className="text-sm font-medium">Revenue</CardTitle>
-              <DollarSign className="h-4 w-4 text-green-500" />
+              <CardTitle className="text-sm font-medium">Consultations</CardTitle>
+              <CheckCircle2 className="h-4 w-4 text-blue-500" />
             </div>
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold">${(quickStats.revenue / 1000).toFixed(1)}k</div>
+            <div className="text-2xl font-bold">{quickStats.consultationsCompleted}</div>
             <p className="text-xs text-muted-foreground mt-1">
-              <span className="text-green-500">↑ 18%</span> from last month
+              <span className="text-green-500">↑ 24%</span> from last month
             </p>
           </CardContent>
         </Card>
