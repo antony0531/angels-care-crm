@@ -1,5 +1,6 @@
 import { createClient } from '@/lib/supabase/server';
 import { NextResponse } from 'next/server';
+import { randomUUID } from 'crypto';
 
 export const dynamic = 'force-dynamic';
 
@@ -53,19 +54,25 @@ export async function POST(request: Request) {
     const supabase = await createClient();
 
     // Insert lead directly into Supabase (bypassing Prisma)
+    const leadData = {
+      id: randomUUID(),
+      email,
+      firstName,
+      lastName,
+      phone,
+      insuranceType: mapInsuranceType(planType),
+      source: source,
+      status: 'NEW',
+      metadata: { notes },
+      createdAt: new Date().toISOString(),
+      updatedAt: new Date().toISOString(),
+    };
+
+    console.log('Inserting lead data:', leadData);
+
     const { data: lead, error: leadError } = await supabase
       .from('leads')
-      .insert({
-        email,
-        firstName,
-        lastName,
-        phone,
-        insuranceType: mapInsuranceType(planType),
-        source: source,
-        status: 'NEW',
-        metadata: { notes },
-        // Let Supabase auto-generate id, createdAt, updatedAt
-      })
+      .insert(leadData)
       .select()
       .single();
 
