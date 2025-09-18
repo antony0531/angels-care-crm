@@ -35,18 +35,15 @@ export async function POST(request: Request) {
       .from('leads')
       .insert({
         email,
-        first_name: firstName,
-        last_name: lastName,
+        firstName,
+        lastName,
         phone,
-        date_of_birth: dateOfBirth,
-        zip_code: zipCode,
-        plan_type: planType,
-        source,
-        notes,
+        insuranceType: planType,
+        source: source,
         status: 'NEW',
-        priority: 'MEDIUM',
-        created_at: new Date().toISOString(),
-        updated_at: new Date().toISOString(),
+        metadata: { notes },
+        createdAt: new Date().toISOString(),
+        updatedAt: new Date().toISOString(),
       })
       .select()
       .single();
@@ -63,11 +60,11 @@ export async function POST(request: Request) {
     const { error: eventError } = await supabase
       .from('webhook_events')
       .insert({
-        event_type: 'form_submission',
+        eventType: 'form_submission',
         payload: data,
         source: source,
         processed: true,
-        created_at: new Date().toISOString(),
+        createdAt: new Date().toISOString(),
       });
 
     if (eventError) {

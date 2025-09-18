@@ -28,7 +28,7 @@ export async function GET(request: Request) {
       query = query.eq('priority', priority);
     }
     if (search) {
-      query = query.or(`first_name.ilike.%${search}%,last_name.ilike.%${search}%,email.ilike.%${search}%`);
+      query = query.or(`firstName.ilike.%${search}%,lastName.ilike.%${search}%,email.ilike.%${search}%`);
     }
 
     // Apply pagination
@@ -36,8 +36,8 @@ export async function GET(request: Request) {
     const to = from + limit - 1;
     query = query.range(from, to);
 
-    // Order by created_at desc
-    query = query.order('created_at', { ascending: false });
+    // Order by createdAt desc
+    query = query.order('createdAt', { ascending: false });
 
     const { data: leads, error, count } = await query;
 
@@ -113,18 +113,15 @@ export async function POST(request: Request) {
       .from('leads')
       .insert({
         email,
-        first_name: firstName,
-        last_name: lastName,
+        firstName,
+        lastName,
         phone,
-        date_of_birth: dateOfBirth,
-        zip_code: zipCode,
-        plan_type: planType,
+        insuranceType: planType,
         source,
-        notes,
         status,
-        priority,
-        created_at: new Date().toISOString(),
-        updated_at: new Date().toISOString(),
+        metadata: { notes },
+        createdAt: new Date().toISOString(),
+        updatedAt: new Date().toISOString(),
       })
       .select()
       .single();
