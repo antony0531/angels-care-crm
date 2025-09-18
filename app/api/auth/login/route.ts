@@ -1,5 +1,4 @@
 import { createClient } from '@/lib/supabase/server';
-import { prisma } from '@/lib/prisma';
 import { NextResponse } from 'next/server';
 
 export const dynamic = 'force-dynamic';
@@ -30,17 +29,7 @@ export async function POST(request: Request) {
       );
     }
 
-    if (data.user) {
-      // Update last login in our database
-      try {
-        await prisma.user.update({
-          where: { id: data.user.id },
-          data: { lastLoginAt: new Date() },
-        });
-      } catch (dbError) {
-        console.error('Error updating user last login:', dbError);
-      }
-    }
+    // Note: Prisma database update removed for serverless compatibility
 
     return NextResponse.json(
       { 
