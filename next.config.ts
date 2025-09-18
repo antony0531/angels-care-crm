@@ -11,6 +11,14 @@ const nextConfig: NextConfig = {
   typescript: {
     ignoreBuildErrors: true,
   },
+  // Help prevent chunk loading errors
+  experimental: {
+    esmExternals: false,
+  },
+  webpack: (config) => {
+    config.resolve.fallback = { fs: false, path: false };
+    return config;
+  },
 };
 
 export default nextConfig;
