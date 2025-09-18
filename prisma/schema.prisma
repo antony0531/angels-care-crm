@@ -1,0 +1,357 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+// User model - integrates with Supabase Auth
+model User {
+  id            String    @id @default(uuid())
+  email         String    @unique
+  name          String?
+  role          UserRole  @default(AGENT)
+  avatar        String?
+  createdAt     DateTime  @default(now())
+  updatedAt     DateTime  @updatedAt
+  lastLoginAt   DateTime?
+  
+  // Relations
+  leads         Lead[]
+  activities    LeadActivity[]
+  notes         LeadNote[]
+  
+  @@map("users")
+}
+
+enum UserRole {
+  ADMIN
+  MANAGER
+  AGENT
+  VIEWER
+}
+
+// Lead model - core entity for insurance CRM
+model Lead {
+  id            String      @id @default(uuid())
+  email         String      @unique
+  firstName     String
+  lastName      String?
+  phone         String?
+  insuranceType InsuranceType
+  source        LeadSource
+  status        LeadStatus  @default(NEW)
+  score         Int         @default(0)
+  tags          String[]    
+  metadata      Json?       // Store custom fields and tracking data
+  
+  // Location
+  city          String?
+  state         String?
+  country       String?
+  
+  // Assignment
+  assignedToId  String?
+  assignedTo    User?       @relation(fields: [assignedToId], references: [id])
+  
+  // UTM and Tracking data
+  utmSource     String?
+  utmMedium     String?
+  utmCampaign   String?
+  landingPage   String?
+  sessionDuration Int?      // in seconds
+  pagesViewed   Int?
+  formCompletionTime Int?   // in seconds
+  
+  // Business data
+  estimatedValue Float?
+  
+  // Timestamps
+  createdAt     DateTime    @default(now())
+  updatedAt     DateTime    @updatedAt
+  lastContactAt DateTime?
+  contactedAt   DateTime?
+  convertedAt   DateTime?
+  
+  // Relations
+  activities    LeadActivity[]
+  notes         LeadNote[]
+  submissions   FormSubmission[]
+  
+  @@index([email])
+  @@index([status])
+  @@index([assignedToId])
+  @@index([createdAt])
+  @@map("leads")
+}
+
+enum InsuranceType {
+  MEDICARE_ADVANTAGE
+  ACA_PLANS
+  SUPPLEMENT
+  PART_D
+  LIFE_INSURANCE
+  AUTO_INSURANCE
+  HOME_INSURANCE
+  OTHER
+}
+
+enum LeadSource {
+  WEBSITE
+  MANUAL
+  IMPORT
+  FACEBOOK
+  GOOGLE_ADS
+  LINKEDIN
+  REFERRAL
+  ORGANIC
+  DIRECT
+  OTHER
+}
+
+enum LeadStatus {
+  NEW
+  CONTACTED
+  QUALIFIED
+  PROPOSAL
+  NEGOTIATION
+  CONVERTED
+  LOST
+  UNQUALIFIED
+}
+
+// Lead Activity Tracking
+model LeadActivity {
+  id          String        @id @default(uuid())
+  type        ActivityType
+  description String
+  metadata    Json?
+  
+  leadId      String
+  lead        Lead          @relation(fields: [leadId], references: [id], onDelete: Cascade)
+  
+  userId      String?
+  user        User?         @relation(fields: [userId], references: [id])
+  
+  createdAt   DateTime      @default(now())
+  
+  @@index([leadId])
+  @@index([createdAt])
+  @@map("lead_activities")
+}
+
+enum ActivityType {
+  EMAIL_SENT
+  EMAIL_OPENED
+  CALL_MADE
+  MEETING_SCHEDULED
+  NOTE_ADDED
+  STATUS_CHANGED
+  ASSIGNED
+  FORM_SUBMITTED
+}
+
+// Lead Notes
+model LeadNote {
+  id        String   @id @default(uuid())
+  content   String   @db.Text
+  
+  leadId    String
+  lead      Lead     @relation(fields: [leadId], references: [id], onDelete: Cascade)
+  
+  userId    String
+  user      User     @relation(fields: [userId], references: [id])
+  
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  
+  @@index([leadId])
+  @@map("lead_notes")
+}
+
+// Analytics - Page views and sessions
+model Analytics {
+  id            String   @id @default(uuid())
+  sessionId     String
+  visitorId     String
+  
+  // Page data
+  url           String
+  path          String
+  title         String?
+  referrer      String?
+  
+  // User agent data
+  userAgent     String?
+  browser       String?
+  device        String?
+  os            String?
+  
+  // Location (from IP)
+  country       String?
+  city          String?
+  
+  // Metrics
+  duration      Int?     // Time on page in seconds
+  bounced       Boolean  @default(false)
+  
+  // UTM Parameters
+  utmSource     String?
+  utmMedium     String?
+  utmCampaign   String?
+  utmTerm       String?
+  utmContent    String?
+  
+  createdAt     DateTime @default(now())
+  
+  @@index([sessionId])
+  @@index([visitorId])
+  @@index([createdAt])
+  @@index([path])
+  @@map("analytics")
+}
+
+// Web Vitals - Performance metrics
+model WebVitals {
+  id            String   @id @default(uuid())
+  sessionId     String
+  url           String
+  
+  // Core Web Vitals
+  lcp           Float?   // Largest Contentful Paint
+  fid           Float?   // First Input Delay
+  cls           Float?   // Cumulative Layout Shift
+  fcp           Float?   // First Contentful Paint
+  ttfb          Float?   // Time to First Byte
+  inp           Float?   // Interaction to Next Paint
+  
+  createdAt     DateTime @default(now())
+  
+  @@index([sessionId])
+  @@index([createdAt])
+  @@map("web_vitals")
+}
+
+// Forms Configuration
+model Form {
+  id            String           @id @default(uuid())
+  name          String
+  description   String?
+  fields        Json             // Form field configuration
+  isActive      Boolean          @default(true)
+  
+  // Tracking
+  submissions   FormSubmission[]
+  
+  createdAt     DateTime         @default(now())
+  updatedAt     DateTime         @updatedAt
+  
+  @@map("forms")
+}
+
+// Form Submissions
+model FormSubmission {
+  id            String   @id @default(uuid())
+  formId        String
+  form          Form     @relation(fields: [formId], references: [id])
+  
+  // Submitted data
+  data          Json
+  
+  // Source tracking
+  url           String?
+  ip            String?
+  userAgent     String?
+  
+  // Lead connection
+  leadId        String?
+  lead          Lead?    @relation(fields: [leadId], references: [id])
+  
+  createdAt     DateTime @default(now())
+  
+  @@index([formId])
+  @@index([leadId])
+  @@index([createdAt])
+  @@map("form_submissions")
+}
+
+// Company/Organization Settings
+model Company {
+  id              String   @id @default(uuid())
+  name            String
+  website         String?
+  logo            String?
+  
+  // Contact Info
+  email           String?
+  phone           String?
+  address         String?
+  
+  // Business Hours
+  businessHours   Json?
+  timezone        String   @default("America/New_York")
+  
+  // Settings
+  leadScoreRules  Json?    // Custom scoring rules
+  autoAssignRules Json?    // Auto-assignment rules
+  
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+  
+  @@map("company")
+}
+
+// Integration Configurations
+model Integration {
+  id            String           @id @default(uuid())
+  type          IntegrationType
+  name          String
+  config        Json             // Encrypted API keys and settings
+  isActive      Boolean          @default(true)
+  
+  lastSyncAt    DateTime?
+  
+  createdAt     DateTime         @default(now())
+  updatedAt     DateTime         @updatedAt
+  
+  @@unique([type])
+  @@map("integrations")
+}
+
+enum IntegrationType {
+  GOOGLE_ANALYTICS
+  WHATSAPP
+  EMAIL_SERVICE
+  WEBHOOK
+  ZAPIER
+  SLACK
+}
+
+// Webhook Events (for tracking)
+model WebhookEvent {
+  id            String   @id @default(uuid())
+  type          String
+  payload       Json
+  status        WebhookStatus @default(PENDING)
+  attempts      Int      @default(0)
+  lastError     String?
+  
+  processedAt   DateTime?
+  createdAt     DateTime @default(now())
+  
+  @@index([status])
+  @@index([createdAt])
+  @@map("webhook_events")
+}
+
+enum WebhookStatus {
+  PENDING
+  PROCESSING
+  SUCCESS
+  FAILED
+}
