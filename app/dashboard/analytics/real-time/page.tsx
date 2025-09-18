@@ -22,120 +22,59 @@ export default function RealTimeMonitorPage() {
   const [refreshInterval, setRefreshInterval] = useState(5000);
   const [lastUpdated, setLastUpdated] = useState(new Date());
 
-  // Active Users
+  // Active Users - requires real analytics integration
   const [activeUsers] = useState({
-    current: 342,
-    change: 12,
-    peak: 456,
-    average: 285
+    current: 0,
+    change: 0,
+    peak: 0,
+    average: 0
   });
 
-  // Live Activity Feed
-  const [activityFeed, setActivityFeed] = useState([
-    { id: 1, time: "Just now", action: "Page View", page: "/medicare-plans", location: "New York, NY", device: "Mobile" },
-    { id: 2, time: "5s ago", action: "Form Start", page: "/contact", location: "Los Angeles, CA", device: "Desktop" },
-    { id: 3, time: "12s ago", action: "Download", page: "/guides/medicare-2024", location: "Chicago, IL", device: "Desktop" },
-    { id: 4, time: "18s ago", action: "Click", page: "/", location: "Houston, TX", device: "Mobile" },
-    { id: 5, time: "25s ago", action: "Conversion", page: "/quote", location: "Phoenix, AZ", device: "Desktop" }
-  ]);
+  // Live Activity Feed - requires real-time analytics
+  const [activityFeed, setActivityFeed] = useState([]);
 
-  // Real-time Metrics
+  // Real-time Metrics - requires analytics integration
   const [realtimeMetrics] = useState({
-    pageviews: { current: 1234, trend: "up", change: 8 },
-    sessions: { current: 342, trend: "up", change: 12 },
-    conversions: { current: 23, trend: "down", change: -3 },
-    avgDuration: { current: "3:45", trend: "up", change: 15 }
+    pageviews: { current: 0, trend: "stable", change: 0 },
+    sessions: { current: 0, trend: "stable", change: 0 },
+    conversions: { current: 0, trend: "stable", change: 0 },
+    avgDuration: { current: "0:00", trend: "stable", change: 0 }
   });
 
-  // Active Pages
-  const [activePages] = useState([
-    { page: "/medicare-plans", users: 89, views: 234, avgTime: "2:34" },
-    { page: "/", users: 67, views: 189, avgTime: "1:23" },
-    { page: "/senior-care", users: 45, views: 123, avgTime: "3:45" },
-    { page: "/contact", users: 34, views: 98, avgTime: "4:12" },
-    { page: "/blog/medicare-guide", users: 28, views: 76, avgTime: "5:23" }
-  ]);
+  // Active Pages - requires analytics integration
+  const [activePages] = useState([]);
 
-  // Traffic Sources
-  const [trafficSources] = useState([
-    { source: "Direct", users: 98, percentage: 28.7, color: "#3b82f6" },
-    { source: "Organic", users: 123, percentage: 36.0, color: "#10b981" },
-    { source: "Social", users: 45, percentage: 13.2, color: "#f59e0b" },
-    { source: "Paid", users: 56, percentage: 16.4, color: "#8b5cf6" },
-    { source: "Referral", users: 20, percentage: 5.8, color: "#ef4444" }
-  ]);
+  // Traffic Sources - requires analytics integration
+  const [trafficSources] = useState([]);
 
-  // Geographic Distribution
-  const [geoData] = useState([
-    { location: "United States", users: 287, percentage: 83.9 },
-    { location: "Canada", users: 23, percentage: 6.7 },
-    { location: "United Kingdom", users: 15, percentage: 4.4 },
-    { location: "Australia", users: 10, percentage: 2.9 },
-    { location: "Other", users: 7, percentage: 2.0 }
-  ]);
+  // Geographic Distribution - requires analytics integration
+  const [geoData] = useState([]);
 
-  // Device Distribution
-  const deviceData = [
-    { name: "Desktop", value: 198, percentage: 57.9 },
-    { name: "Mobile", value: 123, percentage: 36.0 },
-    { name: "Tablet", value: 21, percentage: 6.1 }
-  ];
+  // Device Distribution - requires analytics integration
+  const deviceData = [];
 
-  // Real-time trend (last 60 seconds)
+  // Real-time trend - requires analytics integration
   const [trendData] = useState(
     Array.from({ length: 60 }, (_, i) => ({
       second: i,
-      users: Math.floor(Math.random() * 50) + 300,
-      pageviews: Math.floor(Math.random() * 30) + 20
+      users: 0,
+      pageviews: 0
     }))
   );
 
-  // User Flow
-  const [userFlow] = useState([
-    { from: "Homepage", to: "Products", users: 45 },
-    { from: "Products", to: "Details", users: 34 },
-    { from: "Details", to: "Cart", users: 23 },
-    { from: "Cart", to: "Checkout", users: 18 },
-    { from: "Checkout", to: "Success", users: 12 }
-  ]);
+  // User Flow - requires analytics integration
+  const [userFlow] = useState([]);
 
-  // Performance Alerts
-  const [alerts] = useState([
-    { type: "success", message: "Page load time improved by 15%", time: "2 min ago" },
-    { type: "warning", message: "High bounce rate on /pricing page", time: "5 min ago" },
-    { type: "info", message: "Traffic spike detected from social media", time: "8 min ago" }
-  ]);
+  // Performance Alerts - no real monitoring configured
+  const [alerts] = useState([]);
 
-  // Simulate real-time updates
+  // Real-time updates would require analytics integration
   useEffect(() => {
     if (!autoRefresh) return;
 
     const interval = setInterval(() => {
       setLastUpdated(new Date());
-      
-      // Simulate new activity
-      setActivityFeed(prev => {
-        const newActivity = {
-          id: Date.now(),
-          time: "Just now",
-          action: ["Page View", "Click", "Form Start", "Download", "Conversion"][Math.floor(Math.random() * 5)],
-          page: ["/", "/medicare-plans", "/contact", "/blog", "/quote"][Math.floor(Math.random() * 5)],
-          location: ["New York, NY", "Los Angeles, CA", "Chicago, IL", "Houston, TX"][Math.floor(Math.random() * 4)],
-          device: ["Desktop", "Mobile", "Tablet"][Math.floor(Math.random() * 3)]
-        };
-        
-        // Update times for existing activities
-        const updated = prev.map((item, index) => ({
-          ...item,
-          time: index === 0 ? "5s ago" :
-                index === 1 ? "12s ago" :
-                index === 2 ? "18s ago" :
-                index === 3 ? "25s ago" :
-                "32s ago"
-        }));
-        
-        return [newActivity, ...updated.slice(0, 4)];
-      });
+      // No fake data generation - would need real analytics integration
     }, refreshInterval);
 
     return () => clearInterval(interval);

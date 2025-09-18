@@ -20,48 +20,39 @@ export default function CoreWebVitalsPage() {
   const [selectedDevice, setSelectedDevice] = useState("all");
   const [timeRange, setTimeRange] = useState("7d");
 
-  // Core metrics data
+  // Core metrics data - requires Google Analytics or real monitoring
   const [metrics] = useState({
-    lcp: { value: 1.8, rating: "good", change: -0.2, unit: "s" },
-    fid: { value: 45, rating: "good", change: -5, unit: "ms" },
-    cls: { value: 0.05, rating: "good", change: -0.01, unit: "" },
-    ttfb: { value: 0.6, rating: "good", change: -0.1, unit: "s" },
-    fcp: { value: 1.2, rating: "good", change: -0.15, unit: "s" },
-    inp: { value: 200, rating: "needs-improvement", change: 10, unit: "ms" }
+    lcp: { value: 0, rating: "unknown", change: 0, unit: "s" },
+    fid: { value: 0, rating: "unknown", change: 0, unit: "ms" },
+    cls: { value: 0, rating: "unknown", change: 0, unit: "" },
+    ttfb: { value: 0, rating: "unknown", change: 0, unit: "s" },
+    fcp: { value: 0, rating: "unknown", change: 0, unit: "s" },
+    inp: { value: 0, rating: "unknown", change: 0, unit: "ms" }
   });
 
-  // Historical trend data
+  // Historical trend data - empty until real monitoring is implemented
   const trendData = Array.from({ length: 30 }, (_, i) => ({
     date: format(subDays(new Date(), 29 - i), 'MMM dd'),
-    lcp: 1.5 + Math.random() * 1,
-    fid: 30 + Math.random() * 40,
-    cls: 0.02 + Math.random() * 0.08,
-    ttfb: 0.4 + Math.random() * 0.4,
-    fcp: 1 + Math.random() * 0.8,
-    inp: 150 + Math.random() * 100
+    lcp: 0,
+    fid: 0,
+    cls: 0,
+    ttfb: 0,
+    fcp: 0,
+    inp: 0
   }));
 
-  // Page-specific performance
-  const [pagePerformance] = useState([
-    { page: "/", lcp: 1.5, fid: 40, cls: 0.03, visits: 15234, score: 95 },
-    { page: "/products", lcp: 2.1, fid: 55, cls: 0.08, visits: 8923, score: 88 },
-    { page: "/blog", lcp: 1.8, fid: 35, cls: 0.04, visits: 6234, score: 92 },
-    { page: "/contact", lcp: 1.2, fid: 30, cls: 0.02, visits: 3456, score: 98 },
-    { page: "/about", lcp: 1.9, fid: 48, cls: 0.06, visits: 2890, score: 90 }
-  ]);
+  // Page-specific performance - requires analytics integration
+  const [pagePerformance] = useState([]);
 
-  // Device breakdown
-  const [deviceData] = useState([
-    { device: "Desktop", lcp: 1.5, fid: 35, cls: 0.04, users: 60 },
-    { device: "Mobile", lcp: 2.3, fid: 65, cls: 0.08, users: 35 },
-    { device: "Tablet", lcp: 1.9, fid: 45, cls: 0.06, users: 5 }
-  ]);
+  // Device breakdown - requires analytics integration
+  const [deviceData] = useState([]);
 
   const getRatingColor = (rating: string) => {
     switch(rating) {
       case 'good': return 'text-green-500';
       case 'needs-improvement': return 'text-yellow-500';
       case 'poor': return 'text-red-500';
+      case 'unknown': return 'text-gray-500';
       default: return 'text-gray-500';
     }
   };
@@ -71,7 +62,8 @@ export default function CoreWebVitalsPage() {
       case 'good': return 'bg-green-500/10 text-green-500';
       case 'needs-improvement': return 'bg-yellow-500/10 text-yellow-500';
       case 'poor': return 'bg-red-500/10 text-red-500';
-      default: return '';
+      case 'unknown': return 'bg-gray-500/10 text-gray-500';
+      default: return 'bg-gray-500/10 text-gray-500';
     }
   };
 

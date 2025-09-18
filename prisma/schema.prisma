@@ -356,3 +356,150 @@ enum WebhookStatus {
   SUCCESS
   FAILED
 }
+
+// ===== CRM SETTINGS MODELS =====
+
+// Lead Status Configuration
+model LeadStatusConfig {
+  id        String  @id @default(uuid())
+  name      String
+  color     String
+  order     Int
+  isDefault Boolean @default(false)
+  isActive  Boolean @default(true)
+  
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  
+  @@unique([order])
+  @@map("lead_status_configs")
+}
+
+// Lead Source Configuration  
+model LeadSourceConfig {
+  id       String          @id @default(uuid())
+  name     String
+  type     LeadSourceType
+  isActive Boolean         @default(true)
+  
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  
+  @@map("lead_source_configs")
+}
+
+enum LeadSourceType {
+  paid
+  organic
+  direct
+  email
+  referral
+}
+
+// Custom Field Configuration
+model CustomFieldConfig {
+  id         String              @id @default(uuid())
+  name       String
+  type       CustomFieldType
+  isRequired Boolean             @default(false)
+  options    String[]            // For select type fields
+  order      Int?
+  isActive   Boolean             @default(true)
+  
+  createdAt  DateTime @default(now())
+  updatedAt  DateTime @updatedAt
+  
+  @@map("custom_field_configs")
+}
+
+enum CustomFieldType {
+  text
+  number
+  select
+  textarea
+  date
+}
+
+// Lead Scoring Rules
+model LeadScoringRule {
+  id       String  @id @default(uuid())
+  action   String  // e.g., "Email opened", "Form completed"
+  points   Int
+  isActive Boolean @default(true)
+  order    Int?
+  
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  
+  @@map("lead_scoring_rules")
+}
+
+// Assignment Rules
+model AssignmentRule {
+  id         String              @id @default(uuid())
+  name       String
+  conditions Json                // Array of condition objects
+  assignTo   String
+  priority   Int?                // Higher number = higher priority
+  isActive   Boolean             @default(true)
+  
+  createdAt  DateTime @default(now())
+  updatedAt  DateTime @updatedAt
+  
+  @@map("assignment_rules")
+}
+
+// CRM Settings - Single row for system-wide settings
+model CrmSettings {
+  id String @id @default("default") // Singleton pattern
+  
+  // Notification Settings
+  emailNotifications    Boolean @default(true)
+  smsNotifications      Boolean @default(false)
+  webhookNotifications  Boolean @default(false)
+  notificationEmail     String?
+  smsNumber            String?
+  dailyDigest          Boolean @default(false)
+  instantAlerts        Boolean @default(true)
+  
+  // API & Webhook Settings
+  webhookUrl           String?
+  apiKey               String?
+  enableWebhooks       Boolean @default(false)
+  retryFailedCalls     Boolean @default(true)
+  maxRetries           Int     @default(3)
+  
+  // Import/Export Settings
+  importSource         ImportSourceType @default(csv)
+  exportFormat         ExportFormatType @default(csv)
+  autoExport           Boolean          @default(false)
+  exportFrequency      ExportFrequency  @default(weekly)
+  includeArchived      Boolean          @default(false)
+  
+  // Metadata for extensibility
+  customSettings       Json?
+  
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  
+  @@map("crm_settings")
+}
+
+enum ImportSourceType {
+  csv
+  excel
+  json
+}
+
+enum ExportFormatType {
+  csv
+  excel
+  json
+  pdf
+}
+
+enum ExportFrequency {
+  daily
+  weekly
+  monthly
+}

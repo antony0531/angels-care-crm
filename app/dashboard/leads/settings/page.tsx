@@ -1,6 +1,8 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
+import { useForm, Controller, useFieldArray } from "react-hook-form";
+import { zodResolver } from "@hookform/resolvers/zod";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -13,149 +15,281 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { 
   Settings, Users, Tag, FileText, Bell, Shield, Database,
   Plus, Trash2, Edit, Save, X, ChevronUp, ChevronDown,
-  Globe, Mail, Phone, Calendar, Clock, Zap, Download, Upload
+  Globe, Mail, Phone, Calendar, Clock, Zap, Download, Upload,
+  AlertCircle
 } from "lucide-react";
 import { toast } from "sonner";
+import { 
+  allSettingsSchema, 
+  type AllSettings,
+  type LeadStatus,
+  type CustomField,
+  type IntegrationsSettings
+} from "@/lib/validation/settings-schemas";
 
 export default function LeadSettingsPage() {
-  // Lead Statuses
-  const [statuses, setStatuses] = useState([
-    { id: 1, name: "New", color: "blue", order: 1, isDefault: true },
-    { id: 2, name: "Contacted", color: "yellow", order: 2, isDefault: false },
-    { id: 3, name: "Qualified", color: "purple", order: 3, isDefault: false },
-    { id: 4, name: "Converted", color: "green", order: 4, isDefault: false },
-    { id: 5, name: "Lost", color: "red", order: 5, isDefault: false }
-  ]);
-
-  // Lead Sources
-  const [sources, setSources] = useState([
-    { id: 1, name: "Google Ads", type: "paid", active: true },
-    { id: 2, name: "Organic Search", type: "organic", active: true },
-    { id: 3, name: "Facebook Ads", type: "paid", active: true },
-    { id: 4, name: "Direct", type: "direct", active: true },
-    { id: 5, name: "Email Campaign", type: "email", active: true },
-    { id: 6, name: "Referral", type: "referral", active: true },
-    { id: 7, name: "LinkedIn", type: "paid", active: false },
-    { id: 8, name: "Phone", type: "direct", active: true }
-  ]);
-
-  // Custom Fields
-  const [customFields, setCustomFields] = useState([
-    { id: 1, name: "Insurance Type", type: "select", required: true, options: ["Medicare Advantage", "ACA Plans", "Supplement", "Part D"] },
-    { id: 2, name: "Age Range", type: "select", required: false, options: ["Under 65", "65-70", "71-75", "76+"] },
-    { id: 3, name: "Preferred Contact Time", type: "select", required: false, options: ["Morning", "Afternoon", "Evening"] },
-    { id: 4, name: "Budget", type: "number", required: false },
-    { id: 5, name: "Notes", type: "textarea", required: false }
-  ]);
-
-  // Scoring Rules
-  const [scoringRules] = useState([
-    { id: 1, criteria: "Email opened", points: 5, active: true },
-    { id: 2, criteria: "Link clicked", points: 10, active: true },
-    { id: 3, criteria: "Form completed", points: 25, active: true },
-    { id: 4, criteria: "Phone number provided", points: 15, active: true },
-    { id: 5, criteria: "Downloaded content", points: 20, active: true },
-    { id: 6, criteria: "Multiple page views", points: 8, active: true },
-    { id: 7, criteria: "Return visit", points: 12, active: true }
-  ]);
-
-  // Assignment Rules
-  const [assignmentRules] = useState([
-    { id: 1, condition: "Source = Google Ads", assignTo: "John Smith", active: true },
-    { id: 2, condition: "Insurance Type = Medicare", assignTo: "Jane Doe", active: true },
-    { id: 3, condition: "Score > 70", assignTo: "Senior Agent", active: true },
-    { id: 4, condition: "State = California", assignTo: "West Coast Team", active: false }
-  ]);
-
-  // Notification Settings
-  const [notifications, setNotifications] = useState({
-    newLead: true,
-    leadAssigned: true,
-    leadConverted: true,
-    formSubmission: true,
-    highScoreLead: true,
-    dailyDigest: false,
-    weeklyReport: true
+  const [isLoading, setIsLoading] = useState(false);
+  const [isDataLoading, setIsDataLoading] = useState(true);
+  const [activeTab, setActiveTab] = useState("statuses");
+  
+  // Initialize form with React Hook Form and Zod validation
+  const form = useForm<AllSettings>({
+    resolver: zodResolver(allSettingsSchema),
+    defaultValues: {
+      statuses: [
+        { id: "1", name: "New", color: "blue", order: 1, isDefault: true },
+        { id: "2", name: "Contacted", color: "yellow", order: 2, isDefault: false },
+        { id: "3", name: "Qualified", color: "purple", order: 3, isDefault: false },
+        { id: "4", name: "Converted", color: "green", order: 4, isDefault: false },
+        { id: "5", name: "Lost", color: "red", order: 5, isDefault: false }
+      ],
+      sources: [
+        { id: "1", name: "Google Ads", type: "paid", isActive: true },
+        { id: "2", name: "Organic Search", type: "organic", isActive: true },
+        { id: "3", name: "Facebook Ads", type: "paid", isActive: true },
+        { id: "4", name: "Direct", type: "direct", isActive: true },
+        { id: "5", name: "Email Campaign", type: "email", isActive: true },
+        { id: "6", name: "Referral", type: "referral", isActive: true }
+      ],
+      customFields: [
+        { id: "1", name: "Insurance Type", type: "select", isRequired: true, options: ["Medicare Advantage", "ACA Plans", "Supplement", "Part D"], order: 1 },
+        { id: "2", name: "Age Range", type: "select", isRequired: false, options: ["Under 65", "65-70", "71-75", "76+"], order: 2 },
+        { id: "3", name: "Preferred Contact Time", type: "select", isRequired: false, options: ["Morning", "Afternoon", "Evening"], order: 3 }
+      ],
+      scoring: [
+        { id: "1", action: "Email opened", points: 5, order: 1 },
+        { id: "2", action: "Link clicked", points: 10, order: 2 },
+        { id: "3", action: "Form completed", points: 25, order: 3 },
+        { id: "4", action: "Phone number provided", points: 15, order: 4 }
+      ],
+      assignment: [
+        { 
+          id: "1", 
+          name: "Google Ads Assignment",
+          conditions: { source: "Google Ads" },
+          assignTo: "John Smith", 
+          priority: 1
+        },
+        { 
+          id: "2", 
+          name: "Medicare Specialist",
+          conditions: { insuranceType: "Medicare" },
+          assignTo: "Jane Doe", 
+          priority: 2
+        }
+      ],
+      notifications: {
+        emailNotifications: true,
+        smsNotifications: false,
+        webhookNotifications: true,
+        notificationEmail: "admin@angelcare.com",
+        smsNumber: "",
+        dailyDigest: false,
+        instantAlerts: true
+      },
+      integrations: {
+        webhookUrl: "https://your-domain.com/webhook/leads",
+        apiKey: "your_api_key_here",
+        enableWebhooks: true,
+        retryFailedCalls: true,
+        maxRetries: 3
+      },
+      importExport: {
+        importSource: "csv",
+        exportFormat: "csv",
+        autoExport: false,
+        exportFrequency: "weekly",
+        includeArchived: false
+      }
+    },
+    mode: "onChange"
+  });
+  
+  // Form field arrays for dynamic sections
+  const { fields: statusFields, append: appendStatus, remove: removeStatus } = useFieldArray({
+    control: form.control,
+    name: "statuses"
+  });
+  
+  const { fields: customFieldsArray, append: appendCustomField, remove: removeCustomField } = useFieldArray({
+    control: form.control,
+    name: "customFields"
+  });
+  
+  const { fields: scoringRulesArray, append: appendScoringRule, remove: removeScoringRule } = useFieldArray({
+    control: form.control,
+    name: "scoring"
+  });
+  
+  const { fields: sourcesArray, append: appendSource, remove: removeSource } = useFieldArray({
+    control: form.control,
+    name: "sources"
+  });
+  
+  const { fields: assignmentRulesArray, append: appendAssignmentRule, remove: removeAssignmentRule } = useFieldArray({
+    control: form.control,
+    name: "assignment"
   });
 
-  // API Settings
-  const [apiSettings] = useState({
-    webhookUrl: "https://your-domain.com/webhook/leads",
-    apiKey: "your_api_key_here",
-    enabled: true,
-    retryOnFail: true,
-    maxRetries: 3
-  });
-
-  // Import/Export Settings
-  const [importExportSettings] = useState({
-    autoImport: false,
-    importSource: "csv",
-    exportFormat: "csv",
-    includeCustomFields: true,
-    scheduledExport: false,
-    exportFrequency: "weekly"
-  });
-
-  const handleAddStatus = () => {
-    const newStatus = {
-      id: statuses.length + 1,
-      name: "New Status",
-      color: "gray",
-      order: statuses.length + 1,
-      isDefault: false
-    };
-    setStatuses([...statuses, newStatus]);
-    toast.success("Status added");
-  };
-
-  const handleDeleteStatus = (id: number) => {
-    setStatuses(statuses.filter(s => s.id !== id));
-    toast.success("Status deleted");
-  };
-
-  const handleMoveStatus = (id: number, direction: 'up' | 'down') => {
-    const index = statuses.findIndex(s => s.id === id);
-    if (direction === 'up' && index > 0) {
-      const newStatuses = [...statuses];
-      [newStatuses[index - 1], newStatuses[index]] = [newStatuses[index], newStatuses[index - 1]];
-      setStatuses(newStatuses);
-    } else if (direction === 'down' && index < statuses.length - 1) {
-      const newStatuses = [...statuses];
-      [newStatuses[index], newStatuses[index + 1]] = [newStatuses[index + 1], newStatuses[index]];
-      setStatuses(newStatuses);
+  // Load settings data from the API
+  const loadSettings = async () => {
+    setIsDataLoading(true);
+    try {
+      const response = await fetch('/api/settings');
+      if (!response.ok) {
+        throw new Error(`Failed to load settings: ${response.status}`);
+      }
+      
+      const result = await response.json();
+      if (result.success && result.data) {
+        form.reset(result.data);
+        toast.success("Settings loaded successfully!");
+      }
+    } catch (error) {
+      console.error('Settings load error:', error);
+      toast.error("Failed to load settings. Using defaults.");
+    } finally {
+      setIsDataLoading(false);
     }
   };
 
-  const handleSaveSettings = () => {
-    toast.success("Settings saved successfully");
+  // Professional form submission handler
+  const onSubmit = async (data: AllSettings) => {
+    setIsLoading(true);
+    try {
+      const response = await fetch('/api/settings', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(data),
+      });
+      
+      if (!response.ok) {
+        const errorData = await response.json();
+        throw new Error(errorData.error || `HTTP ${response.status}`);
+      }
+      
+      const result = await response.json();
+      if (result.success) {
+        toast.success("Settings saved successfully!");
+      } else {
+        throw new Error(result.error || "Unknown error occurred");
+      }
+    } catch (error) {
+      console.error('Settings save error:', error);
+      const errorMessage = error instanceof Error 
+        ? error.message 
+        : "Failed to save settings. Please try again.";
+      toast.error(errorMessage);
+    } finally {
+      setIsLoading(false);
+    }
   };
 
-  const getColorClass = (color: string) => {
-    const colors: { [key: string]: string } = {
-      blue: "bg-blue-500",
-      yellow: "bg-yellow-500",
-      purple: "bg-purple-500",
-      green: "bg-green-500",
-      red: "bg-red-500",
-      gray: "bg-gray-500"
-    };
-    return colors[color] || "bg-gray-500";
+  // Load data on component mount
+  useEffect(() => {
+    loadSettings();
+  }, []);
+  
+  // Helper functions for dynamic sections
+  const handleAddStatus = () => {
+    const newOrder = statusFields.length + 1;
+    appendStatus({
+      id: `new-${Date.now()}`,
+      name: "New Status",
+      color: "gray",
+      order: newOrder,
+      isDefault: false
+    });
+    toast.success("Status added");
   };
+  
+  const handleAddCustomField = () => {
+    appendCustomField({
+      id: `new-${Date.now()}`,
+      name: "New Field",
+      type: "text",
+      isRequired: false,
+      order: customFieldsArray.length + 1
+    });
+    toast.success("Custom field added");
+  };
+
+  const handleAddScoringRule = () => {
+    appendScoringRule({
+      id: `new-${Date.now()}`,
+      action: "New Action",
+      points: 5,
+      order: scoringRulesArray.length + 1
+    });
+    toast.success("Scoring rule added");
+  };
+
+  const handleAddAssignmentRule = () => {
+    appendAssignmentRule({
+      id: `new-${Date.now()}`,
+      name: "New Assignment Rule",
+      conditions: {},
+      assignTo: "Unassigned",
+      priority: assignmentRulesArray.length + 1
+    });
+    toast.success("Assignment rule added");
+  };
+
+  // Error display helper
+  const getFieldError = (fieldName: string) => {
+    const error = form.formState.errors;
+    const fieldPath = fieldName.split('.');
+    let currentError: any = error;
+    
+    for (const path of fieldPath) {
+      if (currentError && currentError[path]) {
+        currentError = currentError[path];
+      } else {
+        return null;
+      }
+    }
+    
+    return currentError?.message || null;
+  };
+
+  if (isDataLoading) {
+    return (
+      <div className="flex items-center justify-center h-full">
+        <div className="text-center">
+          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary mx-auto"></div>
+          <p className="mt-4 text-muted-foreground">Loading settings...</p>
+        </div>
+      </div>
+    );
+  }
 
   return (
-    <div className="space-y-6">
+    <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
       {/* Header */}
       <div className="flex items-center justify-between">
         <div>
-          <h1 className="text-3xl font-bold">Lead Settings</h1>
+          <h1 className="text-3xl font-bold flex items-center gap-2">
+            <Settings className="h-8 w-8" />
+            Lead Management Settings
+          </h1>
           <p className="text-muted-foreground mt-2">
-            Configure lead management system settings
+            Configure your CRM settings, lead scoring, and automation rules
           </p>
         </div>
-        <Button onClick={handleSaveSettings}>
-          <Save className="h-4 w-4 mr-2" />
-          Save All Settings
+        <Button type="submit" disabled={isLoading} className="min-w-32">
+          {isLoading ? (
+            <>
+              <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white mr-2"></div>
+              Saving...
+            </>
+          ) : (
+            <>
+              <Save className="h-4 w-4 mr-2" />
+              Save All Settings
+            </>
+          )}
         </Button>
       </div>
 
@@ -168,7 +302,7 @@ export default function LeadSettingsPage() {
           <TabsTrigger value="scoring">Lead Scoring</TabsTrigger>
           <TabsTrigger value="assignment">Assignment Rules</TabsTrigger>
           <TabsTrigger value="notifications">Notifications</TabsTrigger>
-          <TabsTrigger value="api">API & Webhooks</TabsTrigger>
+          <TabsTrigger value="integrations">API & Webhooks</TabsTrigger>
           <TabsTrigger value="import">Import/Export</TabsTrigger>
         </TabsList>
 
@@ -178,256 +312,65 @@ export default function LeadSettingsPage() {
             <CardHeader>
               <div className="flex items-center justify-between">
                 <div>
-                  <CardTitle>Lead Statuses</CardTitle>
-                  <CardDescription>Define the stages of your lead pipeline</CardDescription>
+                  <CardTitle>Lead Status Configuration</CardTitle>
+                  <CardDescription>Customize lead statuses and progression flow</CardDescription>
                 </div>
-                <Button onClick={handleAddStatus} size="sm">
+                <Button type="button" onClick={handleAddStatus} variant="outline" size="sm">
                   <Plus className="h-4 w-4 mr-2" />
                   Add Status
                 </Button>
               </div>
             </CardHeader>
             <CardContent>
-              <div className="space-y-2">
-                {statuses.map((status, index) => (
-                  <div key={status.id} className="flex items-center gap-3 p-3 border rounded-lg">
-                    <div className={`w-3 h-3 rounded-full ${getColorClass(status.color)}`} />
-                    <Input 
-                      value={status.name} 
-                      onChange={(e) => {
-                        const newStatuses = [...statuses];
-                        newStatuses[index].name = e.target.value;
-                        setStatuses(newStatuses);
-                      }}
-                      className="max-w-xs"
-                    />
-                    <Select 
-                      value={status.color}
-                      onValueChange={(value) => {
-                        const newStatuses = [...statuses];
-                        newStatuses[index].color = value;
-                        setStatuses(newStatuses);
-                      }}
-                    >
-                      <SelectTrigger className="w-32">
-                        <SelectValue />
-                      </SelectTrigger>
-                      <SelectContent>
-                        <SelectItem value="blue">Blue</SelectItem>
-                        <SelectItem value="yellow">Yellow</SelectItem>
-                        <SelectItem value="purple">Purple</SelectItem>
-                        <SelectItem value="green">Green</SelectItem>
-                        <SelectItem value="red">Red</SelectItem>
-                        <SelectItem value="gray">Gray</SelectItem>
-                      </SelectContent>
-                    </Select>
-                    {status.isDefault && <Badge>Default</Badge>}
-                    <div className="flex-1" />
-                    <Button
-                      variant="ghost"
-                      size="sm"
-                      onClick={() => handleMoveStatus(status.id, 'up')}
-                      disabled={index === 0}
-                    >
-                      <ChevronUp className="h-4 w-4" />
-                    </Button>
-                    <Button
-                      variant="ghost"
-                      size="sm"
-                      onClick={() => handleMoveStatus(status.id, 'down')}
-                      disabled={index === statuses.length - 1}
-                    >
-                      <ChevronDown className="h-4 w-4" />
-                    </Button>
-                    <Button
-                      variant="ghost"
-                      size="sm"
-                      onClick={() => handleDeleteStatus(status.id)}
-                      disabled={status.isDefault}
-                    >
-                      <Trash2 className="h-4 w-4 text-red-500" />
-                    </Button>
-                  </div>
-                ))}
-              </div>
-            </CardContent>
-          </Card>
-        </TabsContent>
-
-        {/* Lead Sources Tab */}
-        <TabsContent value="sources" className="space-y-4">
-          <Card>
-            <CardHeader>
-              <div className="flex items-center justify-between">
-                <div>
-                  <CardTitle>Lead Sources</CardTitle>
-                  <CardDescription>Configure available lead sources</CardDescription>
-                </div>
-                <Button size="sm">
-                  <Plus className="h-4 w-4 mr-2" />
-                  Add Source
-                </Button>
-              </div>
-            </CardHeader>
-            <CardContent>
-              <div className="grid grid-cols-2 gap-3">
-                {sources.map((source) => (
-                  <div key={source.id} className="flex items-center justify-between p-3 border rounded-lg">
-                    <div className="flex items-center gap-3">
-                      <Switch 
-                        checked={source.active}
-                        onCheckedChange={(checked) => {
-                          const newSources = [...sources];
-                          const index = newSources.findIndex(s => s.id === source.id);
-                          newSources[index].active = checked;
-                          setSources(newSources);
-                        }}
-                      />
-                      <div>
-                        <p className="font-medium">{source.name}</p>
-                        <Badge variant="outline" className="text-xs">{source.type}</Badge>
-                      </div>
-                    </div>
-                    <div className="flex items-center gap-1">
-                      <Button variant="ghost" size="sm">
-                        <Edit className="h-3 w-3" />
-                      </Button>
-                      <Button variant="ghost" size="sm">
-                        <Trash2 className="h-3 w-3" />
-                      </Button>
-                    </div>
-                  </div>
-                ))}
-              </div>
-            </CardContent>
-          </Card>
-        </TabsContent>
-
-        {/* Custom Fields Tab */}
-        <TabsContent value="fields" className="space-y-4">
-          <Card>
-            <CardHeader>
-              <div className="flex items-center justify-between">
-                <div>
-                  <CardTitle>Custom Fields</CardTitle>
-                  <CardDescription>Add custom fields to capture additional lead information</CardDescription>
-                </div>
-                <Button size="sm">
-                  <Plus className="h-4 w-4 mr-2" />
-                  Add Field
-                </Button>
-              </div>
-            </CardHeader>
-            <CardContent>
               <div className="space-y-3">
-                {customFields.map((field) => (
-                  <div key={field.id} className="flex items-center gap-3 p-3 border rounded-lg">
+                {statusFields.map((status, index) => (
+                  <div key={status.id} className="flex items-center gap-4 p-4 border rounded-lg">
                     <div className="flex-1">
-                      <div className="flex items-center gap-3">
-                        <Input value={field.name} className="max-w-xs" placeholder="Field name" />
-                        <Select value={field.type}>
+                      <Controller
+                        name={`statuses.${index}.name`}
+                        control={form.control}
+                        render={({ field }) => (
+                          <Input 
+                            {...field} 
+                            placeholder="Status name"
+                            className="font-medium"
+                          />
+                        )}
+                      />
+                      {getFieldError(`statuses.${index}.name`) && (
+                        <p className="text-sm text-red-500 mt-1">{getFieldError(`statuses.${index}.name`)}</p>
+                      )}
+                    </div>
+                    
+                    <Controller
+                      name={`statuses.${index}.color`}
+                      control={form.control}
+                      render={({ field }) => (
+                        <Select value={field.value} onValueChange={field.onChange}>
                           <SelectTrigger className="w-32">
                             <SelectValue />
                           </SelectTrigger>
                           <SelectContent>
-                            <SelectItem value="text">Text</SelectItem>
-                            <SelectItem value="number">Number</SelectItem>
-                            <SelectItem value="select">Select</SelectItem>
-                            <SelectItem value="textarea">Textarea</SelectItem>
-                            <SelectItem value="date">Date</SelectItem>
+                            <SelectItem value="blue">Blue</SelectItem>
+                            <SelectItem value="yellow">Yellow</SelectItem>
+                            <SelectItem value="purple">Purple</SelectItem>
+                            <SelectItem value="green">Green</SelectItem>
+                            <SelectItem value="red">Red</SelectItem>
+                            <SelectItem value="gray">Gray</SelectItem>
                           </SelectContent>
                         </Select>
-                        <div className="flex items-center gap-2">
-                          <Switch checked={field.required} />
-                          <Label>Required</Label>
-                        </div>
-                      </div>
-                      {field.type === 'select' && field.options && (
-                        <div className="mt-2 flex gap-2 flex-wrap">
-                          {field.options.map((option, i) => (
-                            <Badge key={i} variant="outline">{option}</Badge>
-                          ))}
-                          <Button variant="outline" size="sm">
-                            <Plus className="h-3 w-3" />
-                          </Button>
-                        </div>
                       )}
-                    </div>
-                    <Button variant="ghost" size="sm">
-                      <Trash2 className="h-4 w-4" />
-                    </Button>
-                  </div>
-                ))}
-              </div>
-            </CardContent>
-          </Card>
-        </TabsContent>
-
-        {/* Lead Scoring Tab */}
-        <TabsContent value="scoring" className="space-y-4">
-          <Card>
-            <CardHeader>
-              <div className="flex items-center justify-between">
-                <div>
-                  <CardTitle>Lead Scoring Rules</CardTitle>
-                  <CardDescription>Define how leads are scored based on their actions</CardDescription>
-                </div>
-                <Button size="sm">
-                  <Plus className="h-4 w-4 mr-2" />
-                  Add Rule
-                </Button>
-              </div>
-            </CardHeader>
-            <CardContent>
-              <div className="space-y-2">
-                {scoringRules.map((rule) => (
-                  <div key={rule.id} className="flex items-center gap-3 p-3 border rounded-lg">
-                    <Switch checked={rule.active} />
-                    <div className="flex-1">
-                      <p className="font-medium">{rule.criteria}</p>
-                    </div>
-                    <div className="flex items-center gap-2">
-                      <span className="text-sm text-muted-foreground">Points:</span>
-                      <Input type="number" value={rule.points} className="w-20" />
-                    </div>
-                    <Button variant="ghost" size="sm">
-                      <Trash2 className="h-4 w-4" />
-                    </Button>
-                  </div>
-                ))}
-              </div>
-            </CardContent>
-          </Card>
-        </TabsContent>
-
-        {/* Assignment Rules Tab */}
-        <TabsContent value="assignment" className="space-y-4">
-          <Card>
-            <CardHeader>
-              <div className="flex items-center justify-between">
-                <div>
-                  <CardTitle>Auto-Assignment Rules</CardTitle>
-                  <CardDescription>Automatically assign leads to agents based on criteria</CardDescription>
-                </div>
-                <Button size="sm">
-                  <Plus className="h-4 w-4 mr-2" />
-                  Add Rule
-                </Button>
-              </div>
-            </CardHeader>
-            <CardContent>
-              <div className="space-y-2">
-                {assignmentRules.map((rule) => (
-                  <div key={rule.id} className="flex items-center gap-3 p-3 border rounded-lg">
-                    <Switch checked={rule.active} />
-                    <div className="flex-1">
-                      <p className="font-medium">If {rule.condition}</p>
-                      <p className="text-sm text-muted-foreground">Then assign to: {rule.assignTo}</p>
-                    </div>
-                    <Button variant="ghost" size="sm">
-                      <Edit className="h-3 w-3" />
-                    </Button>
-                    <Button variant="ghost" size="sm">
+                    />
+                    
+                    {form.watch(`statuses.${index}.isDefault`) && <Badge>Default</Badge>}
+                    
+                    <Button
+                      type="button"
+                      variant="ghost"
+                      size="sm"
+                      onClick={() => removeStatus(index)}
+                      disabled={statusFields.length <= 1}
+                    >
                       <Trash2 className="h-4 w-4" />
                     </Button>
                   </div>
@@ -442,151 +385,167 @@ export default function LeadSettingsPage() {
           <Card>
             <CardHeader>
               <CardTitle>Notification Settings</CardTitle>
-              <CardDescription>Configure when and how you receive notifications</CardDescription>
+              <CardDescription>Configure how you receive lead notifications</CardDescription>
             </CardHeader>
-            <CardContent>
-              <div className="space-y-4">
-                {Object.entries(notifications).map(([key, value]) => (
-                  <div key={key} className="flex items-center justify-between">
-                    <div className="flex items-center gap-3">
-                      <Bell className="h-4 w-4 text-muted-foreground" />
-                      <div>
-                        <Label className="text-base">
-                          {key.replace(/([A-Z])/g, ' $1').replace(/^./, str => str.toUpperCase())}
-                        </Label>
-                        <p className="text-sm text-muted-foreground">
-                          Receive notifications for {key.replace(/([A-Z])/g, ' $1').toLowerCase()}
-                        </p>
-                      </div>
-                    </div>
-                    <Switch 
-                      checked={value}
-                      onCheckedChange={(checked) => {
-                        setNotifications({...notifications, [key]: checked});
-                      }}
+            <CardContent className="space-y-4">
+              <div className="grid grid-cols-2 gap-4">
+                <div className="space-y-4">
+                  <div className="flex items-center justify-between">
+                    <Label htmlFor="emailNotifications">Email Notifications</Label>
+                    <Controller
+                      name="notifications.emailNotifications"
+                      control={form.control}
+                      render={({ field }) => (
+                        <Switch
+                          id="emailNotifications"
+                          checked={field.value}
+                          onCheckedChange={field.onChange}
+                        />
+                      )}
                     />
                   </div>
-                ))}
+                  
+                  <div className="flex items-center justify-between">
+                    <Label htmlFor="smsNotifications">SMS Notifications</Label>
+                    <Controller
+                      name="notifications.smsNotifications"
+                      control={form.control}
+                      render={({ field }) => (
+                        <Switch
+                          id="smsNotifications"
+                          checked={field.value}
+                          onCheckedChange={field.onChange}
+                        />
+                      )}
+                    />
+                  </div>
+                  
+                  <div className="flex items-center justify-between">
+                    <Label htmlFor="dailyDigest">Daily Digest</Label>
+                    <Controller
+                      name="notifications.dailyDigest"
+                      control={form.control}
+                      render={({ field }) => (
+                        <Switch
+                          id="dailyDigest"
+                          checked={field.value}
+                          onCheckedChange={field.onChange}
+                        />
+                      )}
+                    />
+                  </div>
+                </div>
+                
+                <div className="space-y-4">
+                  <div>
+                    <Label htmlFor="notificationEmail">Notification Email</Label>
+                    <Controller
+                      name="notifications.notificationEmail"
+                      control={form.control}
+                      render={({ field }) => (
+                        <Input
+                          id="notificationEmail"
+                          type="email"
+                          placeholder="admin@company.com"
+                          {...field}
+                        />
+                      )}
+                    />
+                    {getFieldError('notifications.notificationEmail') && (
+                      <p className="text-sm text-red-500 mt-1">{getFieldError('notifications.notificationEmail')}</p>
+                    )}
+                  </div>
+                  
+                  <div>
+                    <Label htmlFor="smsNumber">SMS Number</Label>
+                    <Controller
+                      name="notifications.smsNumber"
+                      control={form.control}
+                      render={({ field }) => (
+                        <Input
+                          id="smsNumber"
+                          type="tel"
+                          placeholder="+1234567890"
+                          {...field}
+                        />
+                      )}
+                    />
+                    {getFieldError('notifications.smsNumber') && (
+                      <p className="text-sm text-red-500 mt-1">{getFieldError('notifications.smsNumber')}</p>
+                    )}
+                  </div>
+                </div>
               </div>
             </CardContent>
           </Card>
         </TabsContent>
 
-        {/* API & Webhooks Tab */}
-        <TabsContent value="api" className="space-y-4">
+        {/* API & Integrations Tab */}
+        <TabsContent value="integrations" className="space-y-4">
           <Card>
             <CardHeader>
-              <CardTitle>API & Webhook Configuration</CardTitle>
-              <CardDescription>Connect external services and applications</CardDescription>
+              <CardTitle>API & Webhook Settings</CardTitle>
+              <CardDescription>Configure external integrations and webhooks</CardDescription>
             </CardHeader>
-            <CardContent>
-              <div className="space-y-4">
+            <CardContent className="space-y-4">
+              <div className="grid grid-cols-2 gap-4">
                 <div>
-                  <Label>Webhook URL</Label>
-                  <Input value={apiSettings.webhookUrl} placeholder="https://your-domain.com/webhook" className="mt-1" />
+                  <Label htmlFor="webhookUrl">Webhook URL</Label>
+                  <Controller
+                    name="integrations.webhookUrl"
+                    control={form.control}
+                    render={({ field }) => (
+                      <Input
+                        id="webhookUrl"
+                        type="url"
+                        placeholder="https://your-domain.com/webhook"
+                        {...field}
+                      />
+                    )}
+                  />
+                  {getFieldError('integrations.webhookUrl') && (
+                    <p className="text-sm text-red-500 mt-1">{getFieldError('integrations.webhookUrl')}</p>
+                  )}
                 </div>
+                
                 <div>
-                  <Label>API Key</Label>
-                  <div className="flex gap-2 mt-1">
-                    <Input type="password" value={apiSettings.apiKey} />
-                    <Button variant="outline">Regenerate</Button>
-                  </div>
+                  <Label htmlFor="apiKey">API Key</Label>
+                  <Controller
+                    name="integrations.apiKey"
+                    control={form.control}
+                    render={({ field }) => (
+                      <Input
+                        id="apiKey"
+                        type="password"
+                        placeholder="Enter your API key"
+                        {...field}
+                      />
+                    )}
+                  />
+                  {getFieldError('integrations.apiKey') && (
+                    <p className="text-sm text-red-500 mt-1">{getFieldError('integrations.apiKey')}</p>
+                  )}
                 </div>
-                <div className="flex items-center gap-3">
-                  <Switch checked={apiSettings.enabled} />
-                  <Label>Enable webhook notifications</Label>
-                </div>
-                <div className="flex items-center gap-3">
-                  <Switch checked={apiSettings.retryOnFail} />
-                  <Label>Retry failed webhook calls</Label>
-                </div>
-                {apiSettings.retryOnFail && (
-                  <div>
-                    <Label>Max retries</Label>
-                    <Input type="number" value={apiSettings.maxRetries} className="w-20 mt-1" />
-                  </div>
-                )}
               </div>
-            </CardContent>
-          </Card>
-        </TabsContent>
-
-        {/* Import/Export Tab */}
-        <TabsContent value="import" className="space-y-4">
-          <Card>
-            <CardHeader>
-              <CardTitle>Import & Export Settings</CardTitle>
-              <CardDescription>Configure data import and export options</CardDescription>
-            </CardHeader>
-            <CardContent>
-              <div className="space-y-4">
-                <div className="grid grid-cols-2 gap-4">
-                  <div>
-                    <Label>Import Format</Label>
-                    <Select value={importExportSettings.importSource}>
-                      <SelectTrigger className="mt-1">
-                        <SelectValue />
-                      </SelectTrigger>
-                      <SelectContent>
-                        <SelectItem value="csv">CSV</SelectItem>
-                        <SelectItem value="excel">Excel</SelectItem>
-                        <SelectItem value="json">JSON</SelectItem>
-                      </SelectContent>
-                    </Select>
-                  </div>
-                  <div>
-                    <Label>Export Format</Label>
-                    <Select value={importExportSettings.exportFormat}>
-                      <SelectTrigger className="mt-1">
-                        <SelectValue />
-                      </SelectTrigger>
-                      <SelectContent>
-                        <SelectItem value="csv">CSV</SelectItem>
-                        <SelectItem value="excel">Excel</SelectItem>
-                        <SelectItem value="json">JSON</SelectItem>
-                        <SelectItem value="pdf">PDF</SelectItem>
-                      </SelectContent>
-                    </Select>
-                  </div>
-                </div>
-                <div className="flex items-center gap-3">
-                  <Switch checked={importExportSettings.includeCustomFields} />
-                  <Label>Include custom fields in exports</Label>
-                </div>
-                <div className="flex items-center gap-3">
-                  <Switch checked={importExportSettings.scheduledExport} />
-                  <Label>Enable scheduled exports</Label>
-                </div>
-                {importExportSettings.scheduledExport && (
-                  <div>
-                    <Label>Export frequency</Label>
-                    <Select value={importExportSettings.exportFrequency}>
-                      <SelectTrigger className="w-32 mt-1">
-                        <SelectValue />
-                      </SelectTrigger>
-                      <SelectContent>
-                        <SelectItem value="daily">Daily</SelectItem>
-                        <SelectItem value="weekly">Weekly</SelectItem>
-                        <SelectItem value="monthly">Monthly</SelectItem>
-                      </SelectContent>
-                    </Select>
-                  </div>
-                )}
-                <div className="flex gap-2 pt-4">
-                  <Button variant="outline">
-                    <Upload className="h-4 w-4 mr-2" />
-                    Import Leads
-                  </Button>
-                  <Button variant="outline">
-                    <Download className="h-4 w-4 mr-2" />
-                    Export Template
-                  </Button>
-                </div>
+              
+              <div className="flex items-center justify-between">
+                <Label htmlFor="enableWebhooks">Enable Webhooks</Label>
+                <Controller
+                  name="integrations.enableWebhooks"
+                  control={form.control}
+                  render={({ field }) => (
+                    <Switch
+                      id="enableWebhooks"
+                      checked={field.value}
+                      onCheckedChange={field.onChange}
+                    />
+                  )}
+                />
               </div>
             </CardContent>
           </Card>
         </TabsContent>
       </Tabs>
-    </div>
+    </form>
   );
 }

@@ -40,6 +40,7 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
+import { SettingsProvider } from "@/lib/contexts/settings-context";
 
 interface NavItem {
   title: string;
@@ -359,7 +360,9 @@ export default function DashboardLayout({
 
         {/* Page Content */}
         <main className="flex-1 p-4 lg:p-8">
-          {children}
+          <SettingsProvider>
+            {children}
+          </SettingsProvider>
         </main>
       </div>
       

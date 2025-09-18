@@ -40,6 +40,8 @@ export async function middleware(request: NextRequest) {
   const publicRoutes = ['/login', '/api/auth', '/api/debug', '/api/webhooks'];
   const isPublicRoute = publicRoutes.some(route => pathname.startsWith(route));
   
+  
+  
   // Redirect to login if not authenticated and trying to access protected route
   if (!session && !isPublicRoute && pathname !== '/') {
     return NextResponse.redirect(new URL('/login', request.url));

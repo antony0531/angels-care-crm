@@ -21,88 +21,41 @@ export default function UserEngagementPage() {
   const [timeRange, setTimeRange] = useState("7d");
   const [selectedMetric, setSelectedMetric] = useState("all");
 
-  // Key Engagement Metrics
+  // Key Engagement Metrics - requires analytics integration
   const [engagementMetrics] = useState({
-    avgSessionDuration: "4m 32s",
-    bounceRate: 42.3,
-    pagesPerSession: 3.8,
-    scrollDepth: 68,
-    clickThroughRate: 3.2,
-    returnVisitorRate: 34.5,
-    engagementRate: 72.4,
-    exitRate: 28.6
+    avgSessionDuration: "0m 0s",
+    bounceRate: 0,
+    pagesPerSession: 0,
+    scrollDepth: 0,
+    clickThroughRate: 0,
+    returnVisitorRate: 0,
+    engagementRate: 0,
+    exitRate: 0
   });
 
-  // User Behavior Flow
-  const [behaviorFlow] = useState([
-    { step: "Landing", users: 10000, dropoff: 0 },
-    { step: "First Interaction", users: 7200, dropoff: 28 },
-    { step: "Content View", users: 5400, dropoff: 25 },
-    { step: "Deep Engagement", users: 3200, dropoff: 41 },
-    { step: "Conversion", users: 890, dropoff: 72 }
-  ]);
+  // User Behavior Flow - requires analytics integration
+  const [behaviorFlow] = useState([]);
 
-  // Engagement by Page Type
-  const [pageEngagement] = useState([
-    { type: "Homepage", sessions: 15234, avgTime: "2:45", bounceRate: 35, scrollDepth: 82 },
-    { type: "Product Pages", sessions: 12456, avgTime: "5:12", bounceRate: 28, scrollDepth: 74 },
-    { type: "Blog Posts", sessions: 8934, avgTime: "6:34", bounceRate: 45, scrollDepth: 68 },
-    { type: "Landing Pages", sessions: 6789, avgTime: "3:21", bounceRate: 52, scrollDepth: 61 },
-    { type: "Documentation", sessions: 3456, avgTime: "8:45", bounceRate: 22, scrollDepth: 85 }
-  ]);
+  // Engagement by Page Type - requires analytics integration
+  const [pageEngagement] = useState([]);
 
-  // Time on Page Distribution
-  const timeDistribution = [
-    { range: "0-10s", users: 2345, percentage: 15 },
-    { range: "10-30s", users: 3456, percentage: 22 },
-    { range: "30-60s", users: 4567, percentage: 29 },
-    { range: "1-3m", users: 3234, percentage: 21 },
-    { range: "3-5m", users: 1234, percentage: 8 },
-    { range: "5m+", users: 789, percentage: 5 }
-  ];
+  // Time on Page Distribution - requires analytics integration
+  const timeDistribution = [];
 
-  // Heatmap Data (simplified)
-  const [heatmapData] = useState([
-    { element: "Hero CTA", clicks: 3456, percentage: 28 },
-    { element: "Navigation Menu", clicks: 2890, percentage: 23 },
-    { element: "Product Cards", clicks: 2345, percentage: 19 },
-    { element: "Footer Links", clicks: 1890, percentage: 15 },
-    { element: "Social Proof", clicks: 1234, percentage: 10 },
-    { element: "Newsletter Signup", clicks: 678, percentage: 5 }
-  ]);
+  // Heatmap Data - requires heatmap tool integration
+  const [heatmapData] = useState([]);
 
-  // Session Replay Insights
-  const [sessionInsights] = useState([
-    { insight: "Rage Clicks", count: 45, trend: "up", change: 12 },
-    { insight: "Dead Clicks", count: 128, trend: "down", change: -8 },
-    { insight: "Form Abandonment", count: 67, trend: "up", change: 5 },
-    { insight: "Scroll Reversal", count: 234, trend: "down", change: -15 }
-  ]);
+  // Session Replay Insights - requires session recording tool
+  const [sessionInsights] = useState([]);
 
-  // Device Engagement
-  const deviceEngagement = [
-    { device: "Desktop", users: 60, avgTime: "5:23", bounceRate: 38 },
-    { device: "Mobile", users: 35, avgTime: "3:45", bounceRate: 48 },
-    { device: "Tablet", users: 5, avgTime: "4:12", bounceRate: 42 }
-  ];
+  // Device Engagement - requires analytics integration
+  const deviceEngagement = [];
 
-  // Engagement Trend
-  const engagementTrend = Array.from({ length: 30 }, (_, i) => ({
-    date: format(subDays(new Date(), 29 - i), 'MMM dd'),
-    sessions: Math.floor(Math.random() * 2000) + 3000,
-    avgDuration: Math.floor(Math.random() * 60) + 180,
-    bounceRate: Math.floor(Math.random() * 20) + 35,
-    pagesPerSession: (Math.random() * 2 + 2).toFixed(1)
-  }));
+  // Engagement Trend - requires analytics integration
+  const engagementTrend = [];
 
-  // Interactive Elements Performance
-  const [interactiveElements] = useState([
-    { element: "Video Players", interactions: 1234, completionRate: 67 },
-    { element: "Image Galleries", interactions: 890, completionRate: 89 },
-    { element: "Accordions", interactions: 567, completionRate: 92 },
-    { element: "Tab Components", interactions: 456, completionRate: 78 },
-    { element: "Modals", interactions: 345, completionRate: 45 }
-  ]);
+  // Interactive Elements Performance - requires user interaction tracking
+  const [interactiveElements] = useState([]);
 
   return (
     <div className="space-y-6">

@@ -18,95 +18,67 @@ import {
 export default function TechnicalSEOPage() {
   const [selectedCategory, setSelectedCategory] = useState("all");
 
-  // SEO Health Score
+  // SEO Health Score - requires SEO audit tool integration
   const [healthScore] = useState({
-    overall: 87,
-    crawlability: 92,
-    indexability: 85,
-    siteStructure: 88,
-    security: 95,
-    mobile: 83,
-    speed: 79
+    overall: 0,
+    crawlability: 0,
+    indexability: 0,
+    siteStructure: 0,
+    security: 0,
+    mobile: 0,
+    speed: 0
   });
 
-  // Issues Summary
+  // Issues Summary - requires SEO audit tool
   const [issues] = useState({
-    critical: 2,
-    warnings: 8,
-    notices: 15,
-    passed: 142
+    critical: 0,
+    warnings: 0,
+    notices: 0,
+    passed: 0
   });
 
-  // Crawl Statistics
+  // Crawl Statistics - requires Search Console integration
   const [crawlStats] = useState({
-    pagesIndexed: 487,
-    pagesBlocked: 12,
-    orphanPages: 5,
-    brokenLinks: 3,
-    redirectChains: 2,
-    duplicateContent: 7
+    pagesIndexed: 0,
+    pagesBlocked: 0,
+    orphanPages: 0,
+    brokenLinks: 0,
+    redirectChains: 0,
+    duplicateContent: 0
   });
 
-  // Site Structure
-  const [siteStructure] = useState([
-    { level: "Level 0 (Homepage)", pages: 1, avgLoadTime: 1.2 },
-    { level: "Level 1", pages: 12, avgLoadTime: 1.5 },
-    { level: "Level 2", pages: 68, avgLoadTime: 1.8 },
-    { level: "Level 3", pages: 234, avgLoadTime: 2.1 },
-    { level: "Level 4+", pages: 172, avgLoadTime: 2.4 }
-  ]);
+  // Site Structure - requires crawling analysis
+  const [siteStructure] = useState([]);
 
-  // Meta Data Analysis
-  const [metaData] = useState([
-    { type: "Title Tags", optimized: 423, missing: 12, duplicate: 8, tooLong: 15, tooShort: 5 },
-    { type: "Meta Descriptions", optimized: 389, missing: 45, duplicate: 23, tooLong: 12, tooShort: 18 },
-    { type: "H1 Tags", optimized: 456, missing: 7, duplicate: 15, multiple: 9 },
-    { type: "Alt Text", optimized: 892, missing: 127 }
-  ]);
+  // Meta Data Analysis - requires SEO audit
+  const [metaData] = useState([]);
 
-  // Security & HTTPS
-  const [securityChecks] = useState([
-    { check: "HTTPS Enabled", status: "pass", description: "All pages served over HTTPS" },
-    { check: "SSL Certificate", status: "pass", description: "Valid SSL certificate installed" },
-    { check: "Mixed Content", status: "warning", description: "3 pages contain mixed content" },
-    { check: "Security Headers", status: "pass", description: "All security headers configured" },
-    { check: "HSTS", status: "pass", description: "HSTS header properly configured" }
-  ]);
+  // Security & HTTPS - requires security audit
+  const [securityChecks] = useState([]);
 
-  // Mobile Usability
-  const [mobileIssues] = useState([
-    { issue: "Text too small", pages: 5, severity: "high" },
-    { issue: "Clickable elements too close", pages: 12, severity: "medium" },
-    { issue: "Content wider than screen", pages: 3, severity: "high" },
-    { issue: "Viewport not set", pages: 0, severity: "critical" }
-  ]);
+  // Mobile Usability - requires Google PageSpeed/Mobile testing
+  const [mobileIssues] = useState([]);
 
-  // XML Sitemap Status
+  // XML Sitemap Status - requires manual configuration
   const [sitemapData] = useState({
-    status: "valid",
-    urls: 487,
-    lastModified: "2024-01-15",
+    status: "unknown",
+    urls: 0,
+    lastModified: "",
     errors: 0,
-    warnings: 2
+    warnings: 0
   });
 
-  // Robots.txt Status
+  // Robots.txt Status - requires manual configuration
   const [robotsData] = useState({
-    status: "valid",
-    rules: 12,
-    disallowedPaths: 8,
+    status: "unknown",
+    rules: 0,
+    disallowedPaths: 0,
     crawlDelay: 0,
-    sitemapReference: true
+    sitemapReference: false
   });
 
-  // Structured Data
-  const [structuredData] = useState([
-    { type: "Organization", count: 1, status: "valid" },
-    { type: "Article", count: 45, status: "valid" },
-    { type: "Product", count: 128, status: "warning" },
-    { type: "BreadcrumbList", count: 487, status: "valid" },
-    { type: "FAQPage", count: 8, status: "valid" }
-  ]);
+  // Structured Data - requires schema markup implementation
+  const [structuredData] = useState([]);
 
   const getStatusColor = (status: string) => {
     switch(status) {
@@ -118,6 +90,8 @@ export default function TechnicalSEOPage() {
       case 'fail':
       case 'error':
         return 'text-red-500';
+      case 'unknown':
+        return 'text-gray-500';
       default:
         return 'text-gray-500';
     }
@@ -133,6 +107,8 @@ export default function TechnicalSEOPage() {
       case 'fail':
       case 'error':
         return <XCircle className="h-4 w-4 text-red-500" />;
+      case 'unknown':
+        return <Info className="h-4 w-4 text-gray-500" />;
       default:
         return <Info className="h-4 w-4 text-gray-500" />;
     }
@@ -321,17 +297,19 @@ export default function TechnicalSEOPage() {
               <Bar dataKey="pages" fill="#3b82f6" />
             </BarChart>
           </ResponsiveContainer>
-          <div className="mt-4 p-3 bg-yellow-500/10 rounded-lg">
-            <div className="flex items-start gap-2">
-              <AlertTriangle className="h-4 w-4 text-yellow-500 mt-0.5" />
-              <div className="text-sm">
-                <p className="font-medium">Recommendation</p>
-                <p className="text-muted-foreground">
-                  {siteStructure[4].pages} pages are more than 3 clicks from homepage. Consider improving internal linking.
-                </p>
+          {siteStructure.length > 0 && (
+            <div className="mt-4 p-3 bg-yellow-500/10 rounded-lg">
+              <div className="flex items-start gap-2">
+                <AlertTriangle className="h-4 w-4 text-yellow-500 mt-0.5" />
+                <div className="text-sm">
+                  <p className="font-medium">Recommendation</p>
+                  <p className="text-muted-foreground">
+                    Site structure analysis requires SEO audit tool integration.
+                  </p>
+                </div>
               </div>
             </div>
-          </div>
+          )}
         </CardContent>
       </Card>
 

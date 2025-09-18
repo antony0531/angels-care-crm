@@ -22,156 +22,26 @@ export default function LeadFormsPage() {
   const [timeRange, setTimeRange] = useState("30d");
   const [selectedForm, setSelectedForm] = useState("all");
 
-  // Forms Data
-  const [formsData] = useState([
-    {
-      id: "f001",
-      name: "Medicare Plans - Main",
-      url: "/medicare-plans",
-      status: "active",
-      views: 12456,
-      submissions: 456,
-      conversionRate: 3.66,
-      avgCompletionTime: 65,
-      lastSubmission: "2 hours ago",
-      fields: 8,
-      requiredFields: 5,
-      abandonment: 28.5,
-      topDropoffField: "Phone Number"
-    },
-    {
-      id: "f002",
-      name: "ACA Coverage - Sidebar",
-      url: "/aca-coverage",
-      status: "active",
-      views: 8934,
-      submissions: 234,
-      conversionRate: 2.62,
-      avgCompletionTime: 45,
-      lastSubmission: "5 hours ago",
-      fields: 6,
-      requiredFields: 4,
-      abandonment: 35.2,
-      topDropoffField: "Email"
-    },
-    {
-      id: "f003",
-      name: "Quick Quote - Popup",
-      url: "site-wide",
-      status: "active",
-      views: 15678,
-      submissions: 389,
-      conversionRate: 2.48,
-      avgCompletionTime: 38,
-      lastSubmission: "30 min ago",
-      fields: 5,
-      requiredFields: 3,
-      abandonment: 42.1,
-      topDropoffField: "Insurance Type"
-    },
-    {
-      id: "f004",
-      name: "Newsletter Signup",
-      url: "/blog",
-      status: "active",
-      views: 6789,
-      submissions: 567,
-      conversionRate: 8.35,
-      avgCompletionTime: 15,
-      lastSubmission: "1 hour ago",
-      fields: 3,
-      requiredFields: 2,
-      abandonment: 12.3,
-      topDropoffField: "Name"
-    },
-    {
-      id: "f005",
-      name: "Contact Us",
-      url: "/contact",
-      status: "testing",
-      views: 3456,
-      submissions: 123,
-      conversionRate: 3.56,
-      avgCompletionTime: 120,
-      lastSubmission: "4 hours ago",
-      fields: 10,
-      requiredFields: 7,
-      abandonment: 45.6,
-      topDropoffField: "Message"
-    }
-  ]);
+  // Forms Data - requires form builder integration
+  const [formsData] = useState([]);
 
-  // Field Performance
-  const [fieldPerformance] = useState([
-    { field: "First Name", completionRate: 98.2, avgTime: 3.5, dropoffs: 12 },
-    { field: "Last Name", completionRate: 95.8, avgTime: 3.2, dropoffs: 23 },
-    { field: "Email", completionRate: 92.3, avgTime: 5.8, dropoffs: 45 },
-    { field: "Phone", completionRate: 78.5, avgTime: 8.2, dropoffs: 134 },
-    { field: "Insurance Type", completionRate: 85.2, avgTime: 4.5, dropoffs: 67 },
-    { field: "Age Range", completionRate: 89.1, avgTime: 2.8, dropoffs: 34 },
-    { field: "ZIP Code", completionRate: 81.3, avgTime: 4.1, dropoffs: 89 },
-    { field: "Message/Notes", completionRate: 65.4, avgTime: 25.3, dropoffs: 178 }
-  ]);
+  // Field Performance - requires form analytics integration
+  const [fieldPerformance] = useState([]);
 
-  // Form Funnel
-  const [funnelData] = useState([
-    { stage: "Form Views", value: 10000, fill: "#3b82f6" },
-    { stage: "Started Filling", value: 6500, fill: "#10b981" },
-    { stage: "50% Complete", value: 4200, fill: "#f59e0b" },
-    { stage: "75% Complete", value: 2800, fill: "#8b5cf6" },
-    { stage: "Submitted", value: 1247, fill: "#06b6d4" }
-  ]);
+  // Form Funnel - requires form analytics integration
+  const [funnelData] = useState([]);
 
-  // Submission Trends
-  const submissionTrend = Array.from({ length: 30 }, (_, i) => ({
-    date: format(subDays(new Date(), 29 - i), 'MMM dd'),
-    submissions: Math.floor(Math.random() * 50) + 20,
-    views: Math.floor(Math.random() * 500) + 200,
-    rate: (Math.random() * 2 + 2).toFixed(1)
-  }));
+  // Submission Trends - requires form analytics integration
+  const submissionTrend = [];
 
-  // A/B Test Results
-  const [abTests] = useState([
-    {
-      test: "Short vs Long Form",
-      status: "active",
-      variantA: { name: "5 Fields", submissions: 234, rate: 3.8 },
-      variantB: { name: "8 Fields", submissions: 189, rate: 2.9 },
-      confidence: 92,
-      winner: "A"
-    },
-    {
-      test: "Button Color",
-      status: "completed",
-      variantA: { name: "Blue", submissions: 345, rate: 4.2 },
-      variantB: { name: "Green", submissions: 367, rate: 4.5 },
-      confidence: 88,
-      winner: "B"
-    },
-    {
-      test: "Progressive vs Traditional",
-      status: "active",
-      variantA: { name: "Progressive", submissions: 156, rate: 5.1 },
-      variantB: { name: "All at Once", submissions: 134, rate: 3.2 },
-      confidence: 95,
-      winner: "A"
-    }
-  ]);
+  // A/B Test Results - requires A/B testing platform integration
+  const [abTests] = useState([]);
 
-  // Device Performance
-  const [deviceData] = useState([
-    { device: "Desktop", views: 15234, submissions: 678, rate: 4.45, avgTime: 52 },
-    { device: "Mobile", views: 12456, submissions: 423, rate: 3.40, avgTime: 78 },
-    { device: "Tablet", views: 3456, submissions: 134, rate: 3.88, avgTime: 65 }
-  ]);
+  // Device Performance - requires device analytics integration
+  const [deviceData] = useState([]);
 
-  // Error Messages
-  const [errorData] = useState([
-    { error: "Invalid email format", occurrences: 234, field: "Email" },
-    { error: "Phone number too short", occurrences: 189, field: "Phone" },
-    { error: "Required field missing", occurrences: 156, field: "Insurance Type" },
-    { error: "Invalid ZIP code", occurrences: 89, field: "ZIP Code" }
-  ]);
+  // Error Messages - requires form validation analytics
+  const [errorData] = useState([]);
 
   const getStatusBadge = (status: string) => {
     if (status === 'active') return <Badge className="bg-green-500/10 text-green-500">Active</Badge>;

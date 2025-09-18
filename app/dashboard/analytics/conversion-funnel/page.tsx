@@ -21,103 +21,39 @@ export default function ConversionFunnelPage() {
   const [timeRange, setTimeRange] = useState("7d");
   const [funnelType, setFunnelType] = useState("main");
 
-  // Main Conversion Funnel
-  const [mainFunnel] = useState([
-    { stage: "Landing Page", users: 10000, rate: 100, value: "$0", color: "#3b82f6" },
-    { stage: "Product View", users: 6500, rate: 65, value: "$32,500", color: "#10b981" },
-    { stage: "Add to Cart", users: 2800, rate: 28, value: "$56,000", color: "#f59e0b" },
-    { stage: "Checkout", users: 1400, rate: 14, value: "$70,000", color: "#8b5cf6" },
-    { stage: "Purchase", users: 890, rate: 8.9, value: "$125,400", color: "#ef4444" }
-  ]);
+  // Main Conversion Funnel - requires analytics integration
+  const [mainFunnel] = useState([]);
 
-  // Goal Conversions
+  // Goal Conversions - requires analytics integration  
   const [goalConversions] = useState({
-    primary: { name: "Lead Submission", rate: 8.9, target: 10, value: "$125,400" },
-    secondary: [
-      { name: "Newsletter Signup", rate: 12.3, target: 15, value: "$18,450" },
-      { name: "Quote Request", rate: 5.6, target: 7, value: "$42,000" },
-      { name: "Phone Call", rate: 3.2, target: 5, value: "$28,800" },
-      { name: "Document Download", rate: 18.5, target: 20, value: "$9,250" }
-    ]
+    primary: { name: "Lead Submission", rate: 0, target: 10, value: "$0" },
+    secondary: []
   });
 
-  // Conversion by Source
-  const [conversionBySource] = useState([
-    { source: "Organic Search", visitors: 4567, conversions: 456, rate: 10.0, revenue: "$45,600" },
-    { source: "Paid Search", visitors: 3234, conversions: 389, rate: 12.0, revenue: "$38,900" },
-    { source: "Social Media", visitors: 2345, conversions: 164, rate: 7.0, revenue: "$16,400" },
-    { source: "Email", visitors: 1890, conversions: 245, rate: 13.0, revenue: "$24,500" },
-    { source: "Direct", visitors: 1456, conversions: 102, rate: 7.0, revenue: "$10,200" },
-    { source: "Referral", visitors: 987, conversions: 79, rate: 8.0, revenue: "$7,900" }
-  ]);
+  // Conversion by Source - requires analytics integration
+  const [conversionBySource] = useState([]);
 
-  // Device Conversion Rates
-  const [deviceConversions] = useState([
-    { device: "Desktop", sessions: 6789, conversions: 678, rate: 10.0, avgValue: "$145" },
-    { device: "Mobile", sessions: 4567, conversions: 320, rate: 7.0, avgValue: "$95" },
-    { device: "Tablet", sessions: 890, conversions: 71, rate: 8.0, avgValue: "$120" }
-  ]);
+  // Device Conversion Rates - requires analytics integration
+  const [deviceConversions] = useState([]);
 
-  // A/B Test Results
-  const [abTestResults] = useState([
-    {
-      test: "CTA Button Color",
-      status: "active",
-      variant_a: { name: "Blue", conversions: 234, rate: 7.8 },
-      variant_b: { name: "Green", conversions: 267, rate: 8.9 },
-      confidence: 94,
-      uplift: 14.1
-    },
-    {
-      test: "Hero Headline",
-      status: "active",
-      variant_a: { name: "Original", conversions: 189, rate: 6.3 },
-      variant_b: { name: "New", conversions: 212, rate: 7.1 },
-      confidence: 87,
-      uplift: 12.7
-    },
-    {
-      test: "Form Length",
-      status: "completed",
-      variant_a: { name: "Long Form", conversions: 145, rate: 4.8 },
-      variant_b: { name: "Short Form", conversions: 198, rate: 6.6 },
-      confidence: 98,
-      uplift: 37.5
-    }
-  ]);
+  // A/B Test Results - requires A/B testing platform integration
+  const [abTestResults] = useState([]);
 
-  // Path Analysis
-  const [userPaths] = useState([
-    { path: "Home → Products → Cart → Purchase", users: 456, conversion: 45.6 },
-    { path: "Landing → Form → Submit", users: 389, conversion: 38.9 },
-    { path: "Blog → Products → Cart → Purchase", users: 234, conversion: 23.4 },
-    { path: "Home → About → Contact → Submit", users: 167, conversion: 16.7 },
-    { path: "Ad → Landing → Form → Submit", users: 145, conversion: 14.5 }
-  ]);
+  // Path Analysis - requires user journey tracking integration
+  const [userPaths] = useState([]);
 
-  // Conversion Trend
-  const conversionTrend = Array.from({ length: 30 }, (_, i) => ({
-    date: format(subDays(new Date(), 29 - i), 'MMM dd'),
-    rate: 6 + Math.random() * 4,
-    revenue: Math.floor(Math.random() * 5000) + 3000,
-    transactions: Math.floor(Math.random() * 50) + 20
-  }));
+  // Conversion Trend - requires analytics integration
+  const conversionTrend = [];
 
-  // Cart Abandonment
+  // Cart Abandonment - requires e-commerce tracking integration
   const [cartAbandonment] = useState({
-    rate: 68.2,
-    reasons: [
-      { reason: "Unexpected costs", percentage: 34 },
-      { reason: "Account required", percentage: 23 },
-      { reason: "Complex checkout", percentage: 18 },
-      { reason: "Security concerns", percentage: 15 },
-      { reason: "No guest checkout", percentage: 10 }
-    ],
+    rate: 0,
+    reasons: [],
     recovery: {
-      emailsSent: 1234,
-      recovered: 234,
-      recoveryRate: 19.0,
-      revenueRecovered: "$28,900"
+      emailsSent: 0,
+      recovered: 0,
+      recoveryRate: 0,
+      revenueRecovered: "$0"
     }
   });
 
@@ -177,7 +113,7 @@ export default function ConversionFunnelPage() {
               <CardTitle>Main Conversion Funnel</CardTitle>
               <CardDescription>User journey from landing to conversion</CardDescription>
             </div>
-            <Badge variant="outline">Overall: {mainFunnel[mainFunnel.length - 1].rate}%</Badge>
+            <Badge variant="outline">Overall: {mainFunnel.length > 0 ? mainFunnel[mainFunnel.length - 1].rate : 0}%</Badge>
           </div>
         </CardHeader>
         <CardContent>

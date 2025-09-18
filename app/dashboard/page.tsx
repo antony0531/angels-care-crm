@@ -50,12 +50,7 @@ export default function DashboardPage() {
     { time: "Loading...", event: "Loading recent activity", detail: "", type: "lead" }
   ]);
 
-  const performanceTrend = Array.from({ length: 7 }, (_, i) => ({
-    date: format(subDays(new Date(), 6 - i), 'MMM dd'),
-    visitors: Math.floor(Math.random() * 2000) + 3000,
-    leads: Math.floor(Math.random() * 50) + 150,
-    conversions: Math.floor(Math.random() * 20) + 30
-  }));
+  const [performanceTrend, setPerformanceTrend] = useState([]);
 
   // Fetch real dashboard data
   const fetchDashboardData = async () => {
@@ -81,11 +76,10 @@ export default function DashboardPage() {
           totalLeads,
           conversionRate: Number(conversionRate.toFixed(1)),
           consultationsCompleted,
-          // For now, keep some placeholder values for visitor data
-          // These would need analytics integration to be real
-          totalVisitors: Math.max(totalLeads * 20, 100), // Rough estimate
-          avgResponseTime: totalLeads > 10 ? "12m" : totalLeads > 5 ? "8m" : "5m",
-          activeTests: totalLeads > 0 ? 1 : 0,
+          // Real data only - no fake estimates
+          totalVisitors: 0, // Requires actual analytics integration
+          avgResponseTime: "0m",
+          activeTests: 0,
         }));
 
         // Create recent activity from real leads data
@@ -106,18 +100,35 @@ export default function DashboardPage() {
         });
 
         // Add some system activity if we have space
-        if (activity.length < 5) {
-          activity.push({
-            time: "1 hour ago",
-            event: "System Status",
-            detail: "All systems operational",
-            type: "success"
-          });
-        }
+        // No fake activity entries
 
         setRecentActivity(activity.length > 0 ? activity : [
-          { time: "No recent activity", event: "Waiting for leads", detail: "Connect your website forms to start capturing leads", type: "lead" }
+          { time: "No activity yet", event: "No leads captured", detail: "Start by adding your first lead or connecting forms", type: "info" }
         ]);
+        
+        // Generate real performance trend from actual lead dates
+        const trendData = Array.from({ length: 7 }, (_, i) => {
+          const date = subDays(new Date(), 6 - i);
+          const dateStr = format(date, 'yyyy-MM-dd');
+          
+          const leadsOnDate = leadsData.leads.filter((lead: any) => 
+            format(new Date(lead.createdAt), 'yyyy-MM-dd') === dateStr
+          ).length;
+          
+          const conversionsOnDate = leadsData.leads.filter((lead: any) => 
+            lead.status === 'CONVERTED' && 
+            format(new Date(lead.updatedAt || lead.createdAt), 'yyyy-MM-dd') === dateStr
+          ).length;
+          
+          return {
+            date: format(date, 'MMM dd'),
+            visitors: 0, // Real analytics needed
+            leads: leadsOnDate,
+            conversions: conversionsOnDate
+          };
+        });
+        
+        setPerformanceTrend(trendData);
       }
     } catch (error) {
       console.error('Error fetching dashboard data:', error);

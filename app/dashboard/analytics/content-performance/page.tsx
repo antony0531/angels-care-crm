@@ -21,120 +21,38 @@ export default function ContentPerformancePage() {
   const [timeRange, setTimeRange] = useState("30d");
   const [contentType, setContentType] = useState("all");
 
-  // Content Overview Metrics
+  // Content Overview Metrics - requires content analytics integration
   const [contentMetrics] = useState({
-    totalArticles: 156,
-    totalPageviews: 234567,
-    avgReadTime: "4m 23s",
-    avgShareRate: 3.4,
-    engagementScore: 78,
-    returnReaderRate: 42,
-    contentVelocity: 2.3,
-    topicDiversity: 85
+    totalArticles: 0,
+    totalPageviews: 0,
+    avgReadTime: "0m 0s",
+    avgShareRate: 0,
+    engagementScore: 0,
+    returnReaderRate: 0,
+    contentVelocity: 0,
+    topicDiversity: 0
   });
 
-  // Top Performing Content
-  const [topContent] = useState([
-    { 
-      title: "Complete Guide to Medicare Advantage Plans 2024",
-      type: "Guide",
-      views: 45678,
-      avgTime: "8:45",
-      shares: 234,
-      comments: 89,
-      score: 94
-    },
-    {
-      title: "Understanding Your Medicare Benefits",
-      type: "Article",
-      views: 34567,
-      avgTime: "5:23",
-      shares: 189,
-      comments: 67,
-      score: 88
-    },
-    {
-      title: "Senior Living Options: A Comprehensive Overview",
-      type: "Guide",
-      views: 28934,
-      avgTime: "7:12",
-      shares: 156,
-      comments: 45,
-      score: 85
-    },
-    {
-      title: "Medicare Part D: Prescription Coverage Explained",
-      type: "Article",
-      views: 23456,
-      avgTime: "4:34",
-      shares: 123,
-      comments: 34,
-      score: 82
-    },
-    {
-      title: "Choosing the Right Health Insurance After 65",
-      type: "Comparison",
-      views: 19876,
-      avgTime: "6:01",
-      shares: 98,
-      comments: 28,
-      score: 79
-    }
-  ]);
+  // Top Performing Content - requires content management system integration
+  const [topContent] = useState([]);
 
-  // Content Type Performance
-  const [contentTypePerformance] = useState([
-    { type: "Guides", count: 34, avgViews: 12345, avgTime: "7:23", engagementRate: 82 },
-    { type: "Articles", count: 67, avgViews: 8934, avgTime: "4:45", engagementRate: 76 },
-    { type: "Videos", count: 23, avgViews: 15678, avgTime: "3:12", engagementRate: 89 },
-    { type: "Infographics", count: 12, avgViews: 6789, avgTime: "2:34", engagementRate: 71 },
-    { type: "Comparisons", count: 20, avgViews: 9876, avgTime: "5:56", engagementRate: 78 }
-  ]);
+  // Content Type Performance - requires content analytics
+  const [contentTypePerformance] = useState([]);
 
-  // Topic Performance Radar
-  const topicPerformance = [
-    { topic: "Medicare", views: 85, engagement: 78, shares: 82 },
-    { topic: "Insurance", views: 72, engagement: 69, shares: 71 },
-    { topic: "Senior Care", views: 68, engagement: 82, shares: 75 },
-    { topic: "Health Tips", views: 76, engagement: 71, shares: 68 },
-    { topic: "Financial", views: 64, engagement: 66, shares: 62 },
-    { topic: "Lifestyle", views: 58, engagement: 73, shares: 69 }
-  ];
+  // Topic Performance Radar - requires content categorization
+  const topicPerformance = [];
 
-  // Content Lifecycle
-  const contentLifecycle = Array.from({ length: 90 }, (_, i) => ({
-    day: i + 1,
-    newContent: i === 0 ? 1000 : i < 7 ? 800 - (i * 50) : i < 30 ? 200 - (i * 2) : 50 - i/3,
-    evergreen: i < 30 ? 100 + (i * 5) : 250 + (i * 2),
-    seasonal: i > 60 && i < 75 ? 300 + (i * 3) : 50
-  }));
+  // Content Lifecycle - requires content analytics tracking
+  const contentLifecycle = [];
 
-  // Engagement Funnel
-  const [engagementFunnel] = useState([
-    { stage: "Impressions", value: 500000 },
-    { stage: "Clicks", value: 45678 },
-    { stage: "Reads (>30s)", value: 34567 },
-    { stage: "Engagement", value: 12345 },
-    { stage: "Shares", value: 3456 },
-    { stage: "Conversions", value: 890 }
-  ]);
+  // Engagement Funnel - requires analytics integration
+  const [engagementFunnel] = useState([]);
 
-  // Author Performance
-  const [authorPerformance] = useState([
-    { author: "Sarah Johnson", articles: 23, avgViews: 8934, avgScore: 87 },
-    { author: "Michael Chen", articles: 19, avgViews: 7856, avgScore: 84 },
-    { author: "Emily Davis", articles: 17, avgViews: 9234, avgScore: 89 },
-    { author: "Robert Wilson", articles: 21, avgViews: 6789, avgScore: 81 }
-  ]);
+  // Author Performance - requires content management system
+  const [authorPerformance] = useState([]);
 
-  // Content Calendar Heatmap
-  const [publishingPattern] = useState([
-    { day: "Mon", hour: "Morning", posts: 12, engagement: 78 },
-    { day: "Tue", hour: "Afternoon", posts: 8, engagement: 82 },
-    { day: "Wed", hour: "Morning", posts: 15, engagement: 85 },
-    { day: "Thu", hour: "Evening", posts: 6, engagement: 71 },
-    { day: "Fri", hour: "Morning", posts: 10, engagement: 76 }
-  ]);
+  // Content Calendar Heatmap - requires publishing analytics
+  const [publishingPattern] = useState([]);
 
   const getScoreColor = (score: number) => {
     if (score >= 85) return 'text-green-500';

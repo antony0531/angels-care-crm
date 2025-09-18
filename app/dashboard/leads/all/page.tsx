@@ -14,6 +14,8 @@ import { toast } from "sonner";
 import { format } from "date-fns";
 import { trackLeadEvents } from "@/lib/analytics";
 import { FrontendLead } from "@/types/lead";
+import { useLeadStatuses, useLeadSources, useLeadScoringRules } from "@/lib/contexts/settings-context";
+import { calculateLeadScore, formatScore, getScoreColor, getScoreBadgeColor, LeadScoringEngine } from "@/lib/services/lead-scoring";
 
 // Use the shared Lead type
 type Lead = FrontendLead;
@@ -26,6 +28,56 @@ export default function LeadsPage() {
   const [statusFilter, setStatusFilter] = useState("all");
   const [sourceFilter, setSourceFilter] = useState("all");
   const [dateRange, setDateRange] = useState("7d");
+  
+  // Get settings from context
+  const leadStatuses = useLeadStatuses();
+  const leadSources = useLeadSources();
+  const scoringRules = useLeadScoringRules();
+  
+  // Helper function to get status color configuration
+  const getStatusConfig = (statusName: string) => {
+    return leadStatuses.find(s => s.name.toLowerCase() === statusName.toLowerCase());
+  };
+  
+  // Helper function to convert color name to Tailwind classes
+  const getStatusBadgeVariant = (statusName: string): "default" | "secondary" | "destructive" | "outline" => {
+    const statusConfig = getStatusConfig(statusName);
+    if (!statusConfig) return "outline";
+    
+    // Map color to badge variants
+    switch (statusConfig.color) {
+      case "blue": return "default";
+      case "yellow": return "secondary";
+      case "green": return "outline";
+      case "red": return "destructive";
+      case "purple": return "secondary";
+      case "gray": return "outline";
+      default: return "outline";
+    }
+  };
+  
+  // Helper function to get custom color classes for status badges
+  const getStatusBadgeClasses = (statusName: string): string => {
+    const statusConfig = getStatusConfig(statusName);
+    if (!statusConfig) return "";
+    
+    // Return custom color classes based on configuration
+    switch (statusConfig.color) {
+      case "blue": return "bg-blue-100 text-blue-800 border-blue-200 dark:bg-blue-900 dark:text-blue-200";
+      case "yellow": return "bg-yellow-100 text-yellow-800 border-yellow-200 dark:bg-yellow-900 dark:text-yellow-200";
+      case "green": return "bg-green-100 text-green-800 border-green-200 dark:bg-green-900 dark:text-green-200";
+      case "red": return "bg-red-100 text-red-800 border-red-200 dark:bg-red-900 dark:text-red-200";
+      case "purple": return "bg-purple-100 text-purple-800 border-purple-200 dark:bg-purple-900 dark:text-purple-200";
+      case "gray": return "bg-gray-100 text-gray-800 border-gray-200 dark:bg-gray-900 dark:text-gray-200";
+      default: return "";
+    }
+  };
+  
+  // Helper function to calculate lead score
+  const getLeadScore = (lead: Lead) => {
+    if (scoringRules.length === 0) return null;
+    return calculateLeadScore(lead, scoringRules);
+  };
 
   // Fetch leads from API
   const fetchLeads = async () => {
@@ -309,10 +361,11 @@ export default function LeadsPage() {
               </SelectTrigger>
               <SelectContent>
                 <SelectItem value="all">All Status</SelectItem>
-                <SelectItem value="NEW">New</SelectItem>
-                <SelectItem value="CONTACTED">Contacted</SelectItem>
-                <SelectItem value="QUALIFIED">Qualified</SelectItem>
-                <SelectItem value="CONVERTED">Converted</SelectItem>
+                {leadStatuses.map((status) => (
+                  <SelectItem key={status.id} value={status.name.toUpperCase()}>
+                    {status.name}
+                  </SelectItem>
+                ))}
               </SelectContent>
             </Select>
             
@@ -322,13 +375,11 @@ export default function LeadsPage() {
               </SelectTrigger>
               <SelectContent>
                 <SelectItem value="all">All Sources</SelectItem>
-                <SelectItem value="GOOGLE_ADS">Google Ads</SelectItem>
-                <SelectItem value="FACEBOOK">Facebook</SelectItem>
-                <SelectItem value="ORGANIC">Organic</SelectItem>
-                <SelectItem value="DIRECT">Direct</SelectItem>
-                <SelectItem value="REFERRAL">Referral</SelectItem>
-                <SelectItem value="WEBSITE">Website</SelectItem>
-                <SelectItem value="LINKEDIN">LinkedIn</SelectItem>
+                {leadSources.map((source) => (
+                  <SelectItem key={source.id} value={source.name.toUpperCase()}>
+                    {source.name}
+                  </SelectItem>
+                ))}
               </SelectContent>
             </Select>
             
@@ -387,6 +438,7 @@ export default function LeadsPage() {
                     <th className="text-left p-2">Source & Campaign</th>
                     <th className="text-left p-2">Behavior</th>
                     <th className="text-left p-2">Status</th>
+                    <th className="text-left p-2">Score</th>
                     <th className="text-left p-2">Value</th>
                     <th className="text-left p-2">Actions</th>
                   </tr>
@@ -434,11 +486,10 @@ export default function LeadsPage() {
                     </td>
                     <td className="p-2">
                       <div className="space-y-1">
-                        <Badge variant={
-                          lead.status === 'new' ? 'default' :
-                          lead.status === 'contacted' ? 'secondary' :
-                          'outline'
-                        }>
+                        <Badge 
+                          variant="outline"
+                          className={getStatusBadgeClasses(lead.status)}
+                        >
                           {lead.status}
                         </Badge>
                         {lead.assignedAgent && (
@@ -448,6 +499,27 @@ export default function LeadsPage() {
                           {format(new Date(lead.createdAt), 'MMM dd, HH:mm')}
                         </p>
                       </div>
+                    </td>
+                    <td className="p-2">
+                      {(() => {
+                        const score = getLeadScore(lead);
+                        if (!score) {
+                          return <span className="text-xs text-muted-foreground">No rules</span>;
+                        }
+                        return (
+                          <div className="space-y-1">
+                            <Badge 
+                              variant="outline"
+                              className={getScoreBadgeColor(score.percentage)}
+                            >
+                              {score.percentage}%
+                            </Badge>
+                            <p className="text-xs text-muted-foreground">
+                              {score.score}/{score.maxScore} pts
+                            </p>
+                          </div>
+                        );
+                      })()}
                     </td>
                     <td className="p-2">
                       <p className="font-medium">${lead.estimatedValue}</p>

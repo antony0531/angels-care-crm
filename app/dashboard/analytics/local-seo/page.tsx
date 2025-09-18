@@ -21,137 +21,53 @@ export default function LocalSEOPage() {
   const [timeRange, setTimeRange] = useState("30d");
   const [selectedLocation, setSelectedLocation] = useState("all");
 
-  // Local SEO Overview
+  // Local SEO Overview - requires local SEO tool integration
   const [localMetrics] = useState({
-    overallScore: 82,
-    googleMyBusiness: 91,
-    localPackRanking: 3.2,
-    citationScore: 78,
-    reviewRating: 4.6,
-    totalReviews: 234,
-    responseRate: 94,
-    avgResponseTime: "2h 15m"
+    overallScore: 0,
+    googleMyBusiness: 0,
+    localPackRanking: 0,
+    citationScore: 0,
+    reviewRating: 0,
+    totalReviews: 0,
+    responseRate: 0,
+    avgResponseTime: "0m"
   });
 
-  // Location Performance
-  const [locationData] = useState([
-    {
-      location: "New York, NY",
-      visibility: 89,
-      searches: 12456,
-      clicks: 3234,
-      calls: 456,
-      directions: 789,
-      reviews: 67,
-      rating: 4.7
-    },
-    {
-      location: "Los Angeles, CA",
-      visibility: 76,
-      searches: 9876,
-      clicks: 2345,
-      calls: 345,
-      directions: 567,
-      reviews: 45,
-      rating: 4.5
-    },
-    {
-      location: "Chicago, IL",
-      visibility: 82,
-      searches: 7654,
-      clicks: 1890,
-      calls: 234,
-      directions: 456,
-      reviews: 34,
-      rating: 4.6
-    },
-    {
-      location: "Houston, TX",
-      visibility: 71,
-      searches: 5432,
-      clicks: 1234,
-      calls: 167,
-      directions: 345,
-      reviews: 28,
-      rating: 4.4
-    }
-  ]);
+  // Location Performance - requires multi-location business setup
+  const [locationData] = useState([]);
 
-  // Local Search Rankings
-  const [localRankings] = useState([
-    { keyword: "medicare advisor near me", position: 2, change: 1, volume: 8900 },
-    { keyword: "senior care [city]", position: 1, change: 0, volume: 6700 },
-    { keyword: "health insurance advisor", position: 4, change: -1, volume: 5400 },
-    { keyword: "medicare help [city]", position: 3, change: 2, volume: 4300 },
-    { keyword: "senior health advisor", position: 5, change: -2, volume: 3200 }
-  ]);
+  // Local Search Rankings - requires SEO tracking tool integration
+  const [localRankings] = useState([]);
 
-  // GMB Insights
-  const gmbInsights = Array.from({ length: 30 }, (_, i) => ({
-    date: format(subDays(new Date(), 29 - i), 'MMM dd'),
-    searches: Math.floor(Math.random() * 200) + 300,
-    views: Math.floor(Math.random() * 150) + 250,
-    actions: Math.floor(Math.random() * 50) + 30
-  }));
+  // GMB Insights - requires Google My Business API integration
+  const gmbInsights = [];
 
-  // Citation Health
+  // Citation Health - requires citation management tool integration
   const [citationHealth] = useState({
-    totalCitations: 156,
-    consistent: 128,
-    inconsistent: 18,
-    missing: 10,
-    duplicates: 5,
-    topDirectories: [
-      { name: "Google My Business", status: "complete", nap: true },
-      { name: "Yelp", status: "complete", nap: true },
-      { name: "Facebook", status: "complete", nap: true },
-      { name: "Yellow Pages", status: "incomplete", nap: false },
-      { name: "Bing Places", status: "complete", nap: true }
-    ]
+    totalCitations: 0,
+    consistent: 0,
+    inconsistent: 0,
+    missing: 0,
+    duplicates: 0,
+    topDirectories: []
   });
 
-  // Review Analysis
+  // Review Analysis - requires review management integration
   const [reviewAnalysis] = useState({
-    distribution: [
-      { stars: 5, count: 145, percentage: 62 },
-      { stars: 4, count: 56, percentage: 24 },
-      { stars: 3, count: 23, percentage: 10 },
-      { stars: 2, count: 7, percentage: 3 },
-      { stars: 1, count: 3, percentage: 1 }
-    ],
+    distribution: [],
     sentiment: {
-      positive: 78,
-      neutral: 15,
-      negative: 7
+      positive: 0,
+      neutral: 0,
+      negative: 0
     },
-    topKeywords: [
-      { word: "helpful", count: 89 },
-      { word: "professional", count: 76 },
-      { word: "knowledgeable", count: 65 },
-      { word: "patient", count: 54 },
-      { word: "responsive", count: 43 }
-    ]
+    topKeywords: []
   });
 
-  // Competitor Analysis
-  const [competitors] = useState([
-    { name: "Competitor A", visibility: 85, reviews: 312, rating: 4.5, citations: 187 },
-    { name: "Competitor B", visibility: 79, reviews: 245, rating: 4.3, citations: 156 },
-    { name: "Your Business", visibility: 82, reviews: 234, rating: 4.6, citations: 156, isYou: true },
-    { name: "Competitor C", visibility: 73, reviews: 189, rating: 4.2, citations: 134 }
-  ]);
+  // Competitor Analysis - requires competitive analysis tool integration
+  const [competitors] = useState([]);
 
-  // Local Pack Features
-  const [localPackFeatures] = useState([
-    { feature: "Business Name", status: "optimized", impact: "high" },
-    { feature: "Address Consistency", status: "optimized", impact: "high" },
-    { feature: "Phone Number", status: "optimized", impact: "medium" },
-    { feature: "Business Hours", status: "needs-update", impact: "medium" },
-    { feature: "Website Link", status: "optimized", impact: "high" },
-    { feature: "Category Selection", status: "optimized", impact: "high" },
-    { feature: "Photos", status: "needs-more", impact: "medium" },
-    { feature: "Q&A Section", status: "incomplete", impact: "low" }
-  ]);
+  // Local Pack Features - requires Google My Business optimization tools
+  const [localPackFeatures] = useState([]);
 
   const getPositionChange = (change: number) => {
     if (change > 0) return <span className="text-green-500 flex items-center"><ArrowUp className="h-3 w-3" />{change}</span>;
