@@ -65,7 +65,6 @@ const navigation: NavItem[] = [
       { title: "Technical SEO", href: "/dashboard/analytics/technical-seo" },
       { title: "User Engagement", href: "/dashboard/analytics/user-engagement" },
       { title: "Content Performance", href: "/dashboard/analytics/content-performance" },
-      { title: "Conversion Funnel", href: "/dashboard/analytics/conversion-funnel" },
       { title: "Local SEO", href: "/dashboard/analytics/local-seo" },
       { title: "Real-time Monitor", href: "/dashboard/analytics/real-time" }
     ]

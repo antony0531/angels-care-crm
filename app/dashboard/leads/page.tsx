@@ -8,7 +8,7 @@ import { Badge } from "@/components/ui/badge";
 import { Progress } from "@/components/ui/progress";
 import { 
   Users, TrendingUp, Target, Clock, ArrowRight,
-  Phone, Mail, Calendar, DollarSign, Activity,
+  Phone, Mail, Calendar, Activity,
   UserPlus, CheckCircle2, XCircle, Filter, FileText
 } from "lucide-react";
 import { 
@@ -29,7 +29,6 @@ export default function LeadDashboardPage() {
     conversionRate: 0,
     avgResponseTime: "0m",
     qualifiedLeads: 0,
-    totalValue: 0,
     activeAgents: 0
   });
 
@@ -95,7 +94,6 @@ export default function LeadDashboardPage() {
           conversionRate: Number(conversionRate.toFixed(1)),
           avgResponseTime: totalLeads > 10 ? "2h 15m" : totalLeads > 5 ? "1h 30m" : "45m",
           qualifiedLeads,
-          totalValue: 0, // Remove revenue tracking
           activeAgents: 1 // Placeholder until we have agent management
         });
         
@@ -128,8 +126,7 @@ export default function LeadDashboardPage() {
         const sources = Object.entries(sourceGroups).map(([source, data]: [string, any]) => ({
           source: source.replace('_', ' '),
           leads: data.leads,
-          conversion: data.leads > 0 ? Number(((data.converted / data.leads) * 100).toFixed(1)) : 0,
-          value: 0 // Remove revenue tracking
+          conversion: data.leads > 0 ? Number(((data.converted / data.leads) * 100).toFixed(1)) : 0
         })).sort((a, b) => b.leads - a.leads);
         
         setTopSources(sources);
@@ -279,14 +276,14 @@ export default function LeadDashboardPage() {
         <Card className="hover:shadow-lg transition-shadow">
           <CardHeader className="pb-3">
             <div className="flex items-center justify-between">
-              <CardTitle className="text-sm font-medium">Total Value</CardTitle>
-              <DollarSign className="h-4 w-4 text-green-500" />
+              <CardTitle className="text-sm font-medium">Qualified Leads</CardTitle>
+              <Target className="h-4 w-4 text-purple-500" />
             </div>
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold">${(quickStats.totalValue / 1000).toFixed(1)}k</div>
+            <div className="text-2xl font-bold">{quickStats.qualifiedLeads}</div>
             <p className="text-xs text-muted-foreground mt-1">
-              Potential revenue
+              Ready for conversion
             </p>
           </CardContent>
         </Card>
@@ -369,7 +366,6 @@ export default function LeadDashboardPage() {
                   <th className="text-left p-2">Source</th>
                   <th className="text-center p-2">Leads</th>
                   <th className="text-center p-2">Conversion Rate</th>
-                  <th className="text-center p-2">Value</th>
                   <th className="text-center p-2">Trend</th>
                 </tr>
               </thead>
@@ -383,7 +379,6 @@ export default function LeadDashboardPage() {
                         {source.conversion}%
                       </Badge>
                     </td>
-                    <td className="p-2 text-center font-medium">${source.value.toLocaleString()}</td>
                     <td className="p-2 text-center">
                       <TrendingUp className="h-4 w-4 text-green-500 mx-auto" />
                     </td>

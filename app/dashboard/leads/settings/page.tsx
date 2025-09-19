@@ -237,6 +237,16 @@ export default function LeadSettingsPage() {
     toast.success("Assignment rule added");
   };
 
+  const handleAddSource = () => {
+    appendSource({
+      id: `new-${Date.now()}`,
+      name: "New Source",
+      type: "organic",
+      isActive: true
+    });
+    toast.success("Lead source added");
+  };
+
   // Error display helper
   const getFieldError = (fieldName: string) => {
     const error = form.formState.errors;
@@ -299,7 +309,6 @@ export default function LeadSettingsPage() {
           <TabsTrigger value="statuses">Lead Statuses</TabsTrigger>
           <TabsTrigger value="sources">Lead Sources</TabsTrigger>
           <TabsTrigger value="fields">Custom Fields</TabsTrigger>
-          <TabsTrigger value="scoring">Lead Scoring</TabsTrigger>
           <TabsTrigger value="assignment">Assignment Rules</TabsTrigger>
           <TabsTrigger value="notifications">Notifications</TabsTrigger>
           <TabsTrigger value="integrations">API & Webhooks</TabsTrigger>
@@ -375,6 +384,444 @@ export default function LeadSettingsPage() {
                     </Button>
                   </div>
                 ))}
+              </div>
+            </CardContent>
+          </Card>
+        </TabsContent>
+
+        {/* Lead Sources Tab */}
+        <TabsContent value="sources" className="space-y-4">
+          <Card>
+            <CardHeader>
+              <div className="flex items-center justify-between">
+                <div>
+                  <CardTitle>Lead Source Configuration</CardTitle>
+                  <CardDescription>Manage where your leads come from and track source performance</CardDescription>
+                </div>
+                <Button type="button" onClick={handleAddSource} variant="outline" size="sm">
+                  <Plus className="h-4 w-4 mr-2" />
+                  Add Source
+                </Button>
+              </div>
+            </CardHeader>
+            <CardContent>
+              <div className="space-y-3">
+                {sourcesArray.map((source, index) => (
+                  <div key={source.id} className="flex items-center gap-4 p-4 border rounded-lg">
+                    <div className="flex-1">
+                      <Controller
+                        name={`sources.${index}.name`}
+                        control={form.control}
+                        render={({ field }) => (
+                          <Input 
+                            {...field} 
+                            placeholder="Source name"
+                            className="font-medium"
+                          />
+                        )}
+                      />
+                      {getFieldError(`sources.${index}.name`) && (
+                        <p className="text-sm text-red-500 mt-1">{getFieldError(`sources.${index}.name`)}</p>
+                      )}
+                    </div>
+                    
+                    <Controller
+                      name={`sources.${index}.type`}
+                      control={form.control}
+                      render={({ field }) => (
+                        <Select value={field.value} onValueChange={field.onChange}>
+                          <SelectTrigger className="w-40">
+                            <SelectValue />
+                          </SelectTrigger>
+                          <SelectContent>
+                            <SelectItem value="paid">Paid</SelectItem>
+                            <SelectItem value="organic">Organic</SelectItem>
+                            <SelectItem value="direct">Direct</SelectItem>
+                            <SelectItem value="email">Email</SelectItem>
+                            <SelectItem value="referral">Referral</SelectItem>
+                          </SelectContent>
+                        </Select>
+                      )}
+                    />
+                    
+                    <div className="flex items-center space-x-2">
+                      <Label htmlFor={`source-active-${index}`}>Active</Label>
+                      <Controller
+                        name={`sources.${index}.isActive`}
+                        control={form.control}
+                        render={({ field }) => (
+                          <Switch
+                            id={`source-active-${index}`}
+                            checked={field.value}
+                            onCheckedChange={field.onChange}
+                          />
+                        )}
+                      />
+                    </div>
+                    
+                    <Button
+                      type="button"
+                      variant="ghost"
+                      size="sm"
+                      onClick={() => removeSource(index)}
+                      disabled={sourcesArray.length <= 1}
+                    >
+                      <Trash2 className="h-4 w-4" />
+                    </Button>
+                  </div>
+                ))}
+              </div>
+            </CardContent>
+          </Card>
+        </TabsContent>
+
+        {/* Custom Fields Tab */}
+        <TabsContent value="fields" className="space-y-4">
+          <Card>
+            <CardHeader>
+              <div className="flex items-center justify-between">
+                <div>
+                  <CardTitle>Custom Fields Configuration</CardTitle>
+                  <CardDescription>Create custom fields to capture additional lead information</CardDescription>
+                </div>
+                <Button type="button" onClick={handleAddCustomField} variant="outline" size="sm">
+                  <Plus className="h-4 w-4 mr-2" />
+                  Add Field
+                </Button>
+              </div>
+            </CardHeader>
+            <CardContent>
+              <div className="space-y-4">
+                {customFieldsArray.map((field, index) => (
+                  <div key={field.id} className="p-4 border rounded-lg space-y-3">
+                    <div className="flex items-center gap-4">
+                      <div className="flex-1">
+                        <Label htmlFor={`field-name-${index}`}>Field Name</Label>
+                        <Controller
+                          name={`customFields.${index}.name`}
+                          control={form.control}
+                          render={({ field }) => (
+                            <Input 
+                              id={`field-name-${index}`}
+                              {...field} 
+                              placeholder="Field name"
+                              className="font-medium"
+                            />
+                          )}
+                        />
+                        {getFieldError(`customFields.${index}.name`) && (
+                          <p className="text-sm text-red-500 mt-1">{getFieldError(`customFields.${index}.name`)}</p>
+                        )}
+                      </div>
+                      
+                      <div className="w-40">
+                        <Label htmlFor={`field-type-${index}`}>Type</Label>
+                        <Controller
+                          name={`customFields.${index}.type`}
+                          control={form.control}
+                          render={({ field }) => (
+                            <Select value={field.value} onValueChange={field.onChange}>
+                              <SelectTrigger id={`field-type-${index}`}>
+                                <SelectValue />
+                              </SelectTrigger>
+                              <SelectContent>
+                                <SelectItem value="text">Text</SelectItem>
+                                <SelectItem value="number">Number</SelectItem>
+                                <SelectItem value="select">Select</SelectItem>
+                                <SelectItem value="textarea">Textarea</SelectItem>
+                                <SelectItem value="date">Date</SelectItem>
+                              </SelectContent>
+                            </Select>
+                          )}
+                        />
+                      </div>
+                      
+                      <div className="flex items-center space-x-2">
+                        <Label htmlFor={`field-required-${index}`}>Required</Label>
+                        <Controller
+                          name={`customFields.${index}.isRequired`}
+                          control={form.control}
+                          render={({ field }) => (
+                            <Switch
+                              id={`field-required-${index}`}
+                              checked={field.value}
+                              onCheckedChange={field.onChange}
+                            />
+                          )}
+                        />
+                      </div>
+                      
+                      <Button
+                        type="button"
+                        variant="ghost"
+                        size="sm"
+                        onClick={() => removeCustomField(index)}
+                      >
+                        <Trash2 className="h-4 w-4" />
+                      </Button>
+                    </div>
+                    
+                    {form.watch(`customFields.${index}.type`) === 'select' && (
+                      <div>
+                        <Label htmlFor={`field-options-${index}`}>Options (comma-separated)</Label>
+                        <Controller
+                          name={`customFields.${index}.options`}
+                          control={form.control}
+                          render={({ field }) => (
+                            <Textarea
+                              id={`field-options-${index}`}
+                              placeholder="Option 1, Option 2, Option 3"
+                              value={field.value?.join(', ') || ''}
+                              onChange={(e) => {
+                                const options = e.target.value
+                                  .split(',')
+                                  .map(opt => opt.trim())
+                                  .filter(opt => opt.length > 0);
+                                field.onChange(options);
+                              }}
+                            />
+                          )}
+                        />
+                        {getFieldError(`customFields.${index}.options`) && (
+                          <p className="text-sm text-red-500 mt-1">{getFieldError(`customFields.${index}.options`)}</p>
+                        )}
+                      </div>
+                    )}
+                  </div>
+                ))}
+              </div>
+            </CardContent>
+          </Card>
+        </TabsContent>
+
+        {/* Assignment Rules Tab */}
+        <TabsContent value="assignment" className="space-y-4">
+          <Card>
+            <CardHeader>
+              <div className="flex items-center justify-between">
+                <div>
+                  <CardTitle>Assignment Rules</CardTitle>
+                  <CardDescription>Configure automatic lead assignment to agents based on conditions</CardDescription>
+                </div>
+                <Button type="button" onClick={handleAddAssignmentRule} variant="outline" size="sm">
+                  <Plus className="h-4 w-4 mr-2" />
+                  Add Rule
+                </Button>
+              </div>
+            </CardHeader>
+            <CardContent>
+              <div className="space-y-4">
+                {assignmentRulesArray.map((rule, index) => (
+                  <div key={rule.id} className="p-4 border rounded-lg space-y-3">
+                    <div className="flex items-center gap-4">
+                      <div className="flex-1">
+                        <Label htmlFor={`rule-name-${index}`}>Rule Name</Label>
+                        <Controller
+                          name={`assignment.${index}.name`}
+                          control={form.control}
+                          render={({ field }) => (
+                            <Input 
+                              id={`rule-name-${index}`}
+                              {...field} 
+                              placeholder="Rule name"
+                              className="font-medium"
+                            />
+                          )}
+                        />
+                        {getFieldError(`assignment.${index}.name`) && (
+                          <p className="text-sm text-red-500 mt-1">{getFieldError(`assignment.${index}.name`)}</p>
+                        )}
+                      </div>
+                      
+                      <div className="w-40">
+                        <Label htmlFor={`rule-assignto-${index}`}>Assign To</Label>
+                        <Controller
+                          name={`assignment.${index}.assignTo`}
+                          control={form.control}
+                          render={({ field }) => (
+                            <Input 
+                              id={`rule-assignto-${index}`}
+                              {...field} 
+                              placeholder="Agent name"
+                            />
+                          )}
+                        />
+                        {getFieldError(`assignment.${index}.assignTo`) && (
+                          <p className="text-sm text-red-500 mt-1">{getFieldError(`assignment.${index}.assignTo`)}</p>
+                        )}
+                      </div>
+                      
+                      <div className="w-24">
+                        <Label htmlFor={`rule-priority-${index}`}>Priority</Label>
+                        <Controller
+                          name={`assignment.${index}.priority`}
+                          control={form.control}
+                          render={({ field }) => (
+                            <Input 
+                              id={`rule-priority-${index}`}
+                              {...field} 
+                              type="number"
+                              min="1"
+                              placeholder="Priority"
+                              onChange={(e) => field.onChange(parseInt(e.target.value) || 1)}
+                            />
+                          )}
+                        />
+                      </div>
+                      
+                      <Button
+                        type="button"
+                        variant="ghost"
+                        size="sm"
+                        onClick={() => removeAssignmentRule(index)}
+                      >
+                        <Trash2 className="h-4 w-4" />
+                      </Button>
+                    </div>
+                    
+                    <div>
+                      <Label htmlFor={`rule-conditions-${index}`}>Conditions (JSON format)</Label>
+                      <Controller
+                        name={`assignment.${index}.conditions`}
+                        control={form.control}
+                        render={({ field }) => (
+                          <Textarea
+                            id={`rule-conditions-${index}`}
+                            placeholder='{"source": "Google Ads", "insuranceType": "Medicare"}'
+                            value={JSON.stringify(field.value || {}, null, 2)}
+                            onChange={(e) => {
+                              try {
+                                const parsed = JSON.parse(e.target.value || '{}');
+                                field.onChange(parsed);
+                              } catch {
+                                // Keep the text value for editing
+                              }
+                            }}
+                            className="font-mono text-sm"
+                          />
+                        )}
+                      />
+                      {getFieldError(`assignment.${index}.conditions`) && (
+                        <p className="text-sm text-red-500 mt-1">{getFieldError(`assignment.${index}.conditions`)}</p>
+                      )}
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </CardContent>
+          </Card>
+        </TabsContent>
+
+        {/* Import/Export Tab */}
+        <TabsContent value="import" className="space-y-4">
+          <Card>
+            <CardHeader>
+              <CardTitle>Import/Export Settings</CardTitle>
+              <CardDescription>Configure data import and export preferences</CardDescription>
+            </CardHeader>
+            <CardContent className="space-y-4">
+              <div className="grid grid-cols-2 gap-4">
+                <div>
+                  <Label htmlFor="importSource">Import Source Format</Label>
+                  <Controller
+                    name="importExport.importSource"
+                    control={form.control}
+                    render={({ field }) => (
+                      <Select value={field.value} onValueChange={field.onChange}>
+                        <SelectTrigger id="importSource">
+                          <SelectValue />
+                        </SelectTrigger>
+                        <SelectContent>
+                          <SelectItem value="csv">CSV</SelectItem>
+                          <SelectItem value="excel">Excel</SelectItem>
+                          <SelectItem value="json">JSON</SelectItem>
+                        </SelectContent>
+                      </Select>
+                    )}
+                  />
+                  {getFieldError('importExport.importSource') && (
+                    <p className="text-sm text-red-500 mt-1">{getFieldError('importExport.importSource')}</p>
+                  )}
+                </div>
+                
+                <div>
+                  <Label htmlFor="exportFormat">Export Format</Label>
+                  <Controller
+                    name="importExport.exportFormat"
+                    control={form.control}
+                    render={({ field }) => (
+                      <Select value={field.value} onValueChange={field.onChange}>
+                        <SelectTrigger id="exportFormat">
+                          <SelectValue />
+                        </SelectTrigger>
+                        <SelectContent>
+                          <SelectItem value="csv">CSV</SelectItem>
+                          <SelectItem value="excel">Excel</SelectItem>
+                          <SelectItem value="json">JSON</SelectItem>
+                          <SelectItem value="pdf">PDF</SelectItem>
+                        </SelectContent>
+                      </Select>
+                    )}
+                  />
+                  {getFieldError('importExport.exportFormat') && (
+                    <p className="text-sm text-red-500 mt-1">{getFieldError('importExport.exportFormat')}</p>
+                  )}
+                </div>
+              </div>
+              
+              <div className="flex items-center justify-between">
+                <Label htmlFor="autoExport">Auto Export</Label>
+                <Controller
+                  name="importExport.autoExport"
+                  control={form.control}
+                  render={({ field }) => (
+                    <Switch
+                      id="autoExport"
+                      checked={field.value}
+                      onCheckedChange={field.onChange}
+                    />
+                  )}
+                />
+              </div>
+              
+              {form.watch('importExport.autoExport') && (
+                <div>
+                  <Label htmlFor="exportFrequency">Export Frequency</Label>
+                  <Controller
+                    name="importExport.exportFrequency"
+                    control={form.control}
+                    render={({ field }) => (
+                      <Select value={field.value} onValueChange={field.onChange}>
+                        <SelectTrigger id="exportFrequency">
+                          <SelectValue />
+                        </SelectTrigger>
+                        <SelectContent>
+                          <SelectItem value="daily">Daily</SelectItem>
+                          <SelectItem value="weekly">Weekly</SelectItem>
+                          <SelectItem value="monthly">Monthly</SelectItem>
+                        </SelectContent>
+                      </Select>
+                    )}
+                  />
+                  {getFieldError('importExport.exportFrequency') && (
+                    <p className="text-sm text-red-500 mt-1">{getFieldError('importExport.exportFrequency')}</p>
+                  )}
+                </div>
+              )}
+              
+              <div className="flex items-center justify-between">
+                <Label htmlFor="includeArchived">Include Archived Leads</Label>
+                <Controller
+                  name="importExport.includeArchived"
+                  control={form.control}
+                  render={({ field }) => (
+                    <Switch
+                      id="includeArchived"
+                      checked={field.value}
+                      onCheckedChange={field.onChange}
+                    />
+                  )}
+                />
               </div>
             </CardContent>
           </Card>

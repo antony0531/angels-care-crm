@@ -357,6 +357,124 @@ enum WebhookStatus {
   FAILED
 }
 
+// Webhook Retry Queue
+model WebhookRetry {
+  id           String   @id @default(uuid())
+  type         String   // Type of webhook (facebook_lead, google_ads_lead, etc.)
+  payload      Json     // Original webhook payload
+  url          String?  // Optional URL for external webhooks
+  attempts     Int      @default(0)
+  maxAttempts  Int      @default(5)
+  nextRetry    DateTime // When to attempt next retry
+  lastError    String?  // Last error message
+  status       WebhookRetryStatus @default(PENDING)
+  
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+  
+  @@index([status])
+  @@index([nextRetry])
+  @@index([type])
+  @@map("webhook_retries")
+}
+
+enum WebhookRetryStatus {
+  PENDING
+  RETRYING
+  SUCCESS
+  FAILED
+  DEAD_LETTER
+}
+
+// Dead Letter Queue for failed webhooks
+model WebhookDeadLetterQueue {
+  id              String   @id @default(uuid())
+  originalId      String   // ID of the original webhook retry
+  type            String   // Type of webhook
+  payload         Json     // Original webhook payload
+  url             String?  // Optional URL for external webhooks
+  totalAttempts   Int      // Total number of attempts made
+  lastError       String?  // Final error message
+  firstFailedAt   DateTime // When the webhook first failed
+  movedToDlqAt    DateTime // When moved to dead letter queue
+  status          DeadLetterStatus @default(REQUIRES_MANUAL_REVIEW)
+  resolvedAt      DateTime? // When manually resolved
+  metadata        Json?    // Additional metadata for investigation
+  
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+  
+  @@index([status])
+  @@index([type])
+  @@index([movedToDlqAt])
+  @@map("webhook_dead_letter_queue")
+}
+
+enum DeadLetterStatus {
+  REQUIRES_MANUAL_REVIEW
+  INVESTIGATING
+  MANUALLY_RESOLVED
+  PERMANENTLY_FAILED
+}
+
+// Webhook Performance Monitoring
+model WebhookPerformanceLog {
+  id             String   @id @default(uuid())
+  platform       String   // facebook, google, landing_page, generic
+  endpoint       String   // API endpoint path
+  method         String   // HTTP method (POST, GET)
+  statusCode     Int      // HTTP response status code
+  processingTime Int      // Processing time in milliseconds
+  payloadSize    Int      // Request payload size in bytes
+  errorMessage   String?  // Error message if failed
+  userAgent      String?  // Client user agent
+  ipAddress      String?  // Client IP address
+  metadata       Json?    // Additional metadata
+  
+  timestamp      DateTime @default(now())
+  
+  @@index([platform])
+  @@index([timestamp])
+  @@index([statusCode])
+  @@map("webhook_performance_logs")
+}
+
+// Webhook Alerts
+model WebhookAlert {
+  id           String      @id @default(uuid())
+  type         AlertType
+  severity     AlertSeverity
+  platform     String?     // Optional platform filter
+  message      String      // Alert message
+  threshold    Float       // Alert threshold value
+  currentValue Float       // Current metric value
+  resolved     Boolean     @default(false)
+  resolvedAt   DateTime?   // When alert was resolved
+  
+  createdAt    DateTime    @default(now())
+  updatedAt    DateTime    @updatedAt
+  
+  @@index([resolved])
+  @@index([severity])
+  @@index([platform])
+  @@index([createdAt])
+  @@map("webhook_alerts")
+}
+
+enum AlertType {
+  ERROR_RATE
+  PROCESSING_TIME
+  VOLUME_SPIKE
+  DEAD_LETTER_QUEUE
+}
+
+enum AlertSeverity {
+  LOW
+  MEDIUM
+  HIGH
+  CRITICAL
+}
+
 // ===== CRM SETTINGS MODELS =====
 
 // Lead Status Configuration

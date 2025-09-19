@@ -6,31 +6,23 @@ import { Progress } from "@/components/ui/progress";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { 
-  TrendingUp, Users, Clock, Target, Calendar, MapPin,
-  ArrowUp, ArrowDown, BarChart3, Activity, Timer, Zap,
-  Phone, Mail, MousePointer, Eye, ChevronRight
+  BarChart3, Activity
 } from "lucide-react";
 import { 
   LineChart, Line, BarChart, Bar, AreaChart, Area,
-  XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, 
-  Cell, FunnelChart, Funnel, LabelList, ScatterChart, Scatter, ZAxis
+  XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer
 } from "recharts";
-import { format, subDays } from "date-fns";
 
 export default function LeadAnalyticsPage() {
   const [loading, setLoading] = useState(true);
   const [timeRange, setTimeRange] = useState("30d");
-  const [selectedMetric, setSelectedMetric] = useState("all");
 
-  // Real data states
+  // Real data states - only keep functional ones
   const [funnelData, setFunnelData] = useState([]);
-  const [responseTimeData, setResponseTimeData] = useState([]);
-  const [qualityData, setQualityData] = useState([]);
+  const [statusData, setStatusData] = useState([]);
   const [timePatterns, setTimePatterns] = useState({ byHour: [], byDay: [] });
-  const [geoData, setGeoData] = useState([]);
   const [lifecycleData, setLifecycleData] = useState([]);
   const [behaviorData, setBehaviorData] = useState([]);
-  const [scatterData, setScatterData] = useState([]);
 
   // Fetch real analytics data
   const fetchAnalyticsData = async () => {
@@ -43,7 +35,7 @@ export default function LeadAnalyticsPage() {
         const leads = leadsData.leads;
         const totalLeads = leads.length;
         
-        // Status distribution for funnel
+        // Status distribution for real lead statuses
         const statusCounts = {
           new: leads.filter((lead: any) => lead.status === 'NEW').length,
           contacted: leads.filter((lead: any) => lead.status === 'CONTACTED').length,
@@ -51,38 +43,23 @@ export default function LeadAnalyticsPage() {
           converted: leads.filter((lead: any) => lead.status === 'CONVERTED').length
         };
         
-        // Build conversion funnel from real data
-        const totalVisitors = Math.max(totalLeads * 15, 100); // Estimate
+        // Build simple conversion funnel from actual lead data
         const newFunnelData = [
-          { stage: "Website Visitors", value: totalVisitors, fill: "#3b82f6" },
-          { stage: "Form Views", value: Math.floor(totalVisitors * 0.4), fill: "#10b981" },
-          { stage: "Form Starts", value: Math.floor(totalVisitors * 0.25), fill: "#f59e0b" },
-          { stage: "Form Completions", value: totalLeads, fill: "#8b5cf6" },
-          { stage: "Qualified Leads", value: statusCounts.qualified + statusCounts.converted, fill: "#ef4444" },
-          { stage: "Conversions", value: statusCounts.converted, fill: "#06b6d4" }
+          { stage: "New Leads", value: statusCounts.new, fill: "#3b82f6" },
+          { stage: "Contacted", value: statusCounts.contacted, fill: "#10b981" },
+          { stage: "Qualified", value: statusCounts.qualified, fill: "#f59e0b" },
+          { stage: "Converted", value: statusCounts.converted, fill: "#ef4444" }
         ];
         setFunnelData(newFunnelData);
         
-        // Response time analysis requires implementation
-        const newResponseTimeData = [
-          { range: "< 5 min", leads: 0, conversion: 0 },
-          { range: "5-15 min", leads: 0, conversion: 0 },
-          { range: "15-30 min", leads: 0, conversion: 0 },
-          { range: "30-60 min", leads: 0, conversion: 0 },
-          { range: "1-2 hours", leads: 0, conversion: 0 },
-          { range: "2-4 hours", leads: 0, conversion: 0 },
-          { range: "> 4 hours", leads: 0, conversion: 0 }
+        // Lead status distribution
+        const newStatusData = [
+          { status: "New", count: statusCounts.new, percentage: (statusCounts.new / totalLeads) * 100, color: "#3b82f6" },
+          { status: "Contacted", count: statusCounts.contacted, percentage: (statusCounts.contacted / totalLeads) * 100, color: "#10b981" },
+          { status: "Qualified", count: statusCounts.qualified, percentage: (statusCounts.qualified / totalLeads) * 100, color: "#f59e0b" },
+          { status: "Converted", count: statusCounts.converted, percentage: (statusCounts.converted / totalLeads) * 100, color: "#ef4444" }
         ];
-        setResponseTimeData(newResponseTimeData);
-        
-        // Lead quality distribution based on status
-        const newQualityData = [
-          { score: "90-100", label: "Hot", count: statusCounts.converted, percentage: (statusCounts.converted / totalLeads) * 100, color: "#ef4444" },
-          { score: "70-89", label: "Warm", count: statusCounts.qualified, percentage: (statusCounts.qualified / totalLeads) * 100, color: "#f59e0b" },
-          { score: "50-69", label: "Cool", count: statusCounts.contacted, percentage: (statusCounts.contacted / totalLeads) * 100, color: "#3b82f6" },
-          { score: "0-49", label: "Cold", count: statusCounts.new, percentage: (statusCounts.new / totalLeads) * 100, color: "#94a3b8" }
-        ];
-        setQualityData(newQualityData);
+        setStatusData(newStatusData);
         
         // Generate time patterns from real creation dates
         const hourMap = new Map();
@@ -128,10 +105,6 @@ export default function LeadAnalyticsPage() {
         
         setTimePatterns({ byHour, byDay });
         
-        // Geographic distribution requires actual location data
-        const newGeoData = [];
-        setGeoData(newGeoData);
-        
         // Generate lifecycle data from real dates
         const newLifecycleData = Array.from({ length: 30 }, (_, i) => {
           const dayThreshold = new Date();
@@ -152,19 +125,17 @@ export default function LeadAnalyticsPage() {
         }).reverse();
         setLifecycleData(newLifecycleData);
         
-        // Behavior metrics from real data only
+        // Basic conversion metrics from real data
         const conversionRate = totalLeads > 0 ? (statusCounts.converted / totalLeads) * 100 : 0;
+        const qualificationRate = totalLeads > 0 ? ((statusCounts.qualified + statusCounts.converted) / totalLeads) * 100 : 0;
+        const contactRate = totalLeads > 0 ? ((statusCounts.contacted + statusCounts.qualified + statusCounts.converted) / totalLeads) * 100 : 0;
+        
         const newBehaviorData = [
-          { metric: "Lead Response Rate", value: totalLeads > 0 ? ((statusCounts.contacted + statusCounts.qualified + statusCounts.converted) / totalLeads) * 100 : 0, benchmark: 0, unit: "%" },
-          { metric: "Qualification Rate", value: totalLeads > 0 ? ((statusCounts.qualified + statusCounts.converted) / totalLeads) * 100 : 0, benchmark: 0, unit: "%" },
-          { metric: "Conversion Rate", value: conversionRate, benchmark: 0, unit: "%" },
-          { metric: "Contact Success Rate", value: statusCounts.contacted > 0 ? (statusCounts.converted / statusCounts.contacted) * 100 : 0, benchmark: 0, unit: "%" }
+          { metric: "Contact Rate", value: contactRate, unit: "%" },
+          { metric: "Qualification Rate", value: qualificationRate, unit: "%" },
+          { metric: "Conversion Rate", value: conversionRate, unit: "%" }
         ];
         setBehaviorData(newBehaviorData);
-        
-        // Lead scoring requires implementation of scoring algorithms
-        const newScatterData = [];
-        setScatterData(newScatterData);
       }
     } catch (error) {
       console.error('Error fetching analytics data:', error);
@@ -223,120 +194,50 @@ export default function LeadAnalyticsPage() {
         </Button>
       </div>
 
-      {/* Conversion Funnel */}
+      {/* Lead Status Distribution */}
       <Card>
         <CardHeader>
-          <CardTitle>Conversion Funnel Analysis</CardTitle>
-          <CardDescription>Lead journey from visitor to customer</CardDescription>
+          <CardTitle>Lead Status Distribution</CardTitle>
+          <CardDescription>Current status breakdown of all leads</CardDescription>
         </CardHeader>
         <CardContent>
           <div className="space-y-4">
-            {funnelData.map((stage, index) => (
-              <div key={stage.stage}>
-                <div className="flex items-center justify-between mb-2">
+            {statusData.map((status) => (
+              <div key={status.status} className="space-y-2">
+                <div className="flex items-center justify-between">
                   <div className="flex items-center gap-3">
-                    <span className="font-medium">{stage.stage}</span>
-                    <Badge variant="outline">
-                      {stage.value.toLocaleString()} ({((stage.value / funnelData[0].value) * 100).toFixed(1)}%)
-                    </Badge>
+                    <div className="w-3 h-3 rounded" style={{ backgroundColor: status.color }} />
+                    <span className="font-medium">{status.status}</span>
                   </div>
-                  {index < funnelData.length - 1 && (
-                    <span className="text-sm text-muted-foreground">
-                      {((1 - funnelData[index + 1].value / stage.value) * 100).toFixed(1)}% drop-off
-                    </span>
-                  )}
-                </div>
-                <div className="relative">
-                  <Progress 
-                    value={(stage.value / funnelData[0].value) * 100} 
-                    className="h-8"
-                    style={{ backgroundColor: stage.fill + '20' }}
-                  />
-                  <div 
-                    className="absolute inset-y-0 left-0 rounded-md"
-                    style={{ 
-                      width: `${(stage.value / funnelData[0].value) * 100}%`,
-                      backgroundColor: stage.fill
-                    }}
-                  />
-                </div>
-                {index < funnelData.length - 1 && (
-                  <div className="flex justify-center my-2">
-                    <ChevronRight className="h-4 w-4 text-muted-foreground rotate-90" />
+                  <div className="text-right">
+                    <span className="font-bold">{status.count}</span>
+                    <span className="text-sm text-muted-foreground ml-2">{status.percentage.toFixed(1)}%</span>
                   </div>
-                )}
+                </div>
+                <Progress value={status.percentage} className="h-4" />
               </div>
             ))}
           </div>
         </CardContent>
       </Card>
 
-      <div className="grid grid-cols-2 gap-6">
-        {/* Response Time Impact */}
-        <Card>
-          <CardHeader>
-            <CardTitle>Response Time Impact</CardTitle>
-            <CardDescription>Conversion rate by response time</CardDescription>
-          </CardHeader>
-          <CardContent>
-            <ResponsiveContainer width="100%" height={300}>
-              <BarChart data={responseTimeData}>
-                <CartesianGrid strokeDasharray="3 3" />
-                <XAxis dataKey="range" angle={-45} textAnchor="end" height={80} />
-                <YAxis yAxisId="left" />
-                <YAxis yAxisId="right" orientation="right" />
-                <Tooltip />
-                <Bar yAxisId="left" dataKey="leads" fill="#3b82f6" name="Leads" />
-                <Line yAxisId="right" type="monotone" dataKey="conversion" stroke="#10b981" name="Conversion %" strokeWidth={2} />
-              </BarChart>
-            </ResponsiveContainer>
-            <div className="mt-4 p-3 bg-yellow-500/10 rounded-lg">
-              <p className="text-sm font-medium">Key Insight</p>
-              <p className="text-xs text-muted-foreground">
-                Leads contacted within 5 minutes are 6x more likely to convert
-              </p>
-            </div>
-          </CardContent>
-        </Card>
-
-        {/* Lead Quality Distribution */}
-        <Card>
-          <CardHeader>
-            <CardTitle>Lead Quality Distribution</CardTitle>
-            <CardDescription>Scoring breakdown</CardDescription>
-          </CardHeader>
-          <CardContent>
-            <div className="space-y-4">
-              {qualityData.map((quality) => (
-                <div key={quality.score} className="space-y-2">
-                  <div className="flex items-center justify-between">
-                    <div className="flex items-center gap-2">
-                      <div className="w-3 h-3 rounded" style={{ backgroundColor: quality.color }} />
-                      <span className="font-medium">{quality.label}</span>
-                      <span className="text-sm text-muted-foreground">({quality.score})</span>
-                    </div>
-                    <div className="text-right">
-                      <span className="font-bold">{quality.count}</span>
-                      <span className="text-sm text-muted-foreground ml-2">{quality.percentage}%</span>
-                    </div>
-                  </div>
-                  <Progress value={quality.percentage} className="h-2" />
-                </div>
-              ))}
-            </div>
-            <div className="grid grid-cols-2 gap-4 mt-4 pt-4 border-t">
-              <div>
-                <p className="text-xs text-muted-foreground">Avg Lead Score</p>
-                <p className="text-xl font-bold">{behaviorData.length > 3 ? behaviorData[3].value.toFixed(1) : '7.2'}</p>
+      {/* Conversion Metrics */}
+      <Card>
+        <CardHeader>
+          <CardTitle>Conversion Metrics</CardTitle>
+          <CardDescription>Key performance indicators</CardDescription>
+        </CardHeader>
+        <CardContent>
+          <div className="grid grid-cols-3 gap-6">
+            {behaviorData.map((metric) => (
+              <div key={metric.metric} className="text-center">
+                <p className="text-2xl font-bold text-primary">{metric.value.toFixed(1)}{metric.unit}</p>
+                <p className="text-sm text-muted-foreground">{metric.metric}</p>
               </div>
-              <div>
-                <p className="text-xs text-muted-foreground">Qualified Rate</p>
-                <p className="text-xl font-bold">{behaviorData.length > 1 ? behaviorData[1].value.toFixed(1) : '25.0'}%</p>
-              </div>
-            </div>
-          </CardContent>
-        </Card>
-      </div>
+            ))}
+          </div>
+        </CardContent>
+      </Card>
 
       {/* Time Patterns */}
       <div className="grid grid-cols-2 gap-6">
@@ -425,106 +326,6 @@ export default function LeadAnalyticsPage() {
         </CardContent>
       </Card>
 
-      <div className="grid grid-cols-2 gap-6">
-        {/* Geographic Performance */}
-        <Card>
-          <CardHeader>
-            <CardTitle>Geographic Performance</CardTitle>
-            <CardDescription>Top performing states</CardDescription>
-          </CardHeader>
-          <CardContent>
-            <div className="space-y-3">
-              {geoData.map((state, index) => (
-                <div key={state.state} className="flex items-center justify-between p-3 border rounded-lg">
-                  <div className="flex items-center gap-3">
-                    <div className="text-lg font-bold text-muted-foreground">#{index + 1}</div>
-                    <MapPin className="h-4 w-4 text-blue-500" />
-                    <div>
-                      <p className="font-medium">{state.state}</p>
-                      <p className="text-xs text-muted-foreground">{state.leads} leads</p>
-                    </div>
-                  </div>
-                  <div className="text-right">
-                    <Badge variant="outline">{state.conversion}% conv.</Badge>
-                    <p className="text-xs text-muted-foreground mt-1">${state.avgValue} avg</p>
-                  </div>
-                </div>
-              ))}
-            </div>
-          </CardContent>
-        </Card>
-
-        {/* Behavior Metrics */}
-        <Card>
-          <CardHeader>
-            <CardTitle>Behavior Analysis</CardTitle>
-            <CardDescription>Lead engagement metrics vs benchmarks</CardDescription>
-          </CardHeader>
-          <CardContent>
-            <div className="space-y-4">
-              {behaviorData.map((metric) => (
-                <div key={metric.metric} className="space-y-2">
-                  <div className="flex items-center justify-between text-sm">
-                    <span>{metric.metric}</span>
-                    <span className="font-bold">
-                      {metric.value} {metric.unit}
-                    </span>
-                  </div>
-                  <div className="relative">
-                    <Progress value={(metric.value / Math.max(metric.value, metric.benchmark)) * 100} className="h-2" />
-                    <div 
-                      className="absolute top-0 h-2 w-0.5 bg-red-500"
-                      style={{ left: `${(metric.benchmark / Math.max(metric.value, metric.benchmark)) * 100}%` }}
-                    />
-                  </div>
-                  <p className="text-xs text-muted-foreground">
-                    Benchmark: {metric.benchmark} {metric.unit}
-                    {metric.value > metric.benchmark && (
-                      <span className="text-green-500 ml-1">
-                        (+{((metric.value - metric.benchmark) / metric.benchmark * 100).toFixed(0)}%)
-                      </span>
-                    )}
-                  </p>
-                </div>
-              ))}
-            </div>
-          </CardContent>
-        </Card>
-      </div>
-
-      {/* Lead Scoring Scatter */}
-      <Card>
-        <CardHeader>
-          <CardTitle>Lead Scoring Analysis</CardTitle>
-          <CardDescription>Engagement vs Fit Score correlation</CardDescription>
-        </CardHeader>
-        <CardContent>
-          <ResponsiveContainer width="100%" height={400}>
-            <ScatterChart>
-              <CartesianGrid strokeDasharray="3 3" />
-              <XAxis dataKey="engagement" name="Engagement Score" unit="%" />
-              <YAxis dataKey="fitScore" name="Fit Score" unit="%" />
-              <ZAxis dataKey="value" range={[50, 400]} name="Value" unit="$" />
-              <Tooltip cursor={{ strokeDasharray: '3 3' }} />
-              <Scatter 
-                name="Leads" 
-                data={scatterData} 
-                fill={(entry: any) => entry.converted ? '#10b981' : '#3b82f6'}
-              />
-            </ScatterChart>
-          </ResponsiveContainer>
-          <div className="mt-4 flex items-center justify-center gap-4">
-            <div className="flex items-center gap-2">
-              <div className="w-3 h-3 rounded-full bg-blue-500" />
-              <span className="text-sm">Not Converted</span>
-            </div>
-            <div className="flex items-center gap-2">
-              <div className="w-3 h-3 rounded-full bg-green-500" />
-              <span className="text-sm">Converted</span>
-            </div>
-          </div>
-        </CardContent>
-      </Card>
     </div>
   );
 }

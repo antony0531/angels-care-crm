@@ -30,22 +30,6 @@ export interface CustomFieldConfig {
   isActive: boolean;
 }
 
-export interface LeadScoringRule {
-  id: string;
-  action: string;
-  points: number;
-  isActive: boolean;
-  order?: number;
-}
-
-export interface AssignmentRule {
-  id: string;
-  name: string;
-  conditions: any; // JSON object
-  assignTo: string;
-  priority?: number;
-  isActive: boolean;
-}
 
 export interface CrmSettings {
   id: string;
@@ -79,8 +63,6 @@ export interface AllSettings {
   statuses: LeadStatusConfig[];
   sources: LeadSourceConfig[];
   customFields: CustomFieldConfig[];
-  scoringRules: LeadScoringRule[];
-  assignmentRules: AssignmentRule[];
   crmSettings: CrmSettings | null;
 }
 
@@ -118,15 +100,6 @@ export function useCustomFields() {
   return settings?.customFields || [];
 }
 
-export function useLeadScoringRules() {
-  const { settings } = useSettings();
-  return settings?.scoringRules || [];
-}
-
-export function useAssignmentRules() {
-  const { settings } = useSettings();
-  return settings?.assignmentRules || [];
-}
 
 export function useCrmSettings() {
   const { settings } = useSettings();
@@ -181,8 +154,6 @@ export function SettingsProvider({ children }: SettingsProviderProps) {
         statuses: [],
         sources: [],
         customFields: [],
-        scoringRules: [],
-        assignmentRules: [],
         crmSettings: null,
       });
     } finally {

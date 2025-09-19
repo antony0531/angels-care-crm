@@ -14,8 +14,7 @@ import { toast } from "sonner";
 import { format } from "date-fns";
 import { trackLeadEvents } from "@/lib/analytics";
 import { FrontendLead } from "@/types/lead";
-import { useLeadStatuses, useLeadSources, useLeadScoringRules } from "@/lib/contexts/settings-context";
-import { calculateLeadScore, formatScore, getScoreColor, getScoreBadgeColor, LeadScoringEngine } from "@/lib/services/lead-scoring";
+import { useLeadStatuses, useLeadSources } from "@/lib/contexts/settings-context";
 
 // Use the shared Lead type
 type Lead = FrontendLead;
@@ -29,10 +28,13 @@ export default function LeadsPage() {
   const [sourceFilter, setSourceFilter] = useState("all");
   const [dateRange, setDateRange] = useState("7d");
   
+  // Pagination state
+  const [currentPage, setCurrentPage] = useState(1);
+  const [itemsPerPage, setItemsPerPage] = useState(20);
+  
   // Get settings from context
   const leadStatuses = useLeadStatuses();
   const leadSources = useLeadSources();
-  const scoringRules = useLeadScoringRules();
   
   // Helper function to get status color configuration
   const getStatusConfig = (statusName: string) => {
@@ -73,11 +75,6 @@ export default function LeadsPage() {
     }
   };
   
-  // Helper function to calculate lead score
-  const getLeadScore = (lead: Lead) => {
-    if (scoringRules.length === 0) return null;
-    return calculateLeadScore(lead, scoringRules);
-  };
 
   // Fetch leads from API
   const fetchLeads = async () => {
@@ -150,6 +147,8 @@ export default function LeadsPage() {
     }
 
     setFilteredLeads(filtered);
+    // Reset to first page when filters change
+    setCurrentPage(1);
   }, [searchTerm, statusFilter, sourceFilter, dateRange, leads]);
 
   const handleContact = async (lead: Lead) => {
@@ -222,6 +221,75 @@ export default function LeadsPage() {
     }
   };
 
+  const handleStatusChange = async (lead: Lead, newStatus: string) => {
+    try {
+      // Update lead status via API
+      const response = await fetch(`/api/leads/${lead.id}`, {
+        method: 'PATCH',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          status: newStatus.toUpperCase(),
+          ...(newStatus.toLowerCase() === 'contacted' ? { contactedAt: new Date().toISOString() } : {}),
+          ...(newStatus.toLowerCase() === 'converted' ? { convertedAt: new Date().toISOString() } : {}),
+        }),
+      });
+
+      if (!response.ok) {
+        throw new Error('Failed to update lead status');
+      }
+
+      // Update local state
+      setLeads(prev => prev.map(l => 
+        l.id === lead.id 
+          ? { 
+              ...l, 
+              status: newStatus.toLowerCase() as const,
+              ...(newStatus.toLowerCase() === 'contacted' ? { contactedAt: new Date().toISOString() } : {}),
+              ...(newStatus.toLowerCase() === 'converted' ? { convertedAt: new Date().toISOString() } : {}),
+            }
+          : l
+      ));
+      
+      toast.success(`Status updated to ${newStatus}`);
+    } catch (error) {
+      console.error('Error updating lead status:', error);
+      toast.error('Failed to update lead status');
+    }
+  };
+
+  const handleInsuranceTypeChange = async (lead: Lead, newInsuranceType: string) => {
+    try {
+      // Update lead insurance type via API
+      const response = await fetch(`/api/leads/${lead.id}`, {
+        method: 'PATCH',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          insuranceType: newInsuranceType,
+        }),
+      });
+
+      if (!response.ok) {
+        throw new Error('Failed to update insurance type');
+      }
+
+      // Update local state
+      setLeads(prev => prev.map(l => 
+        l.id === lead.id 
+          ? { ...l, insuranceType: newInsuranceType }
+          : l
+      ));
+      
+      toast.success(`Insurance type updated to ${newInsuranceType}`);
+    } catch (error) {
+      console.error('Error updating insurance type:', error);
+      toast.error('Failed to update insurance type');
+    }
+  };
+
   const exportLeads = () => {
     const headers = ["ID", "Name", "Email", "Phone", "Type", "Status", "Source", "UTM Campaign", "Pages Viewed", "Session Duration", "Created At"];
     const rows = filteredLeads.map(lead => [
@@ -250,6 +318,12 @@ export default function LeadsPage() {
     document.body.removeChild(link);
   };
 
+  // Calculate pagination
+  const totalPages = Math.ceil(filteredLeads.length / itemsPerPage);
+  const startIndex = (currentPage - 1) * itemsPerPage;
+  const endIndex = startIndex + itemsPerPage;
+  const currentLeads = filteredLeads.slice(startIndex, endIndex);
+
   // Calculate stats
   const stats = {
     total: filteredLeads.length,
@@ -261,8 +335,7 @@ export default function LeadsPage() {
       : '0',
     avgFormTime: filteredLeads.length > 0
       ? Math.round(filteredLeads.reduce((acc, l) => acc + l.formCompletionTime, 0) / filteredLeads.length)
-      : 0,
-    totalValue: filteredLeads.reduce((acc, l) => acc + (l.estimatedValue || 0), 0)
+      : 0
   };
 
   return (
@@ -328,14 +401,6 @@ export default function LeadsPage() {
           </CardContent>
         </Card>
         
-        <Card>
-          <CardHeader className="pb-2">
-            <CardTitle className="text-sm font-medium">Total Value</CardTitle>
-          </CardHeader>
-          <CardContent>
-            <div className="text-2xl font-bold">${stats.totalValue}</div>
-          </CardContent>
-        </Card>
       </div>
 
       {/* Filters */}
@@ -438,13 +503,10 @@ export default function LeadsPage() {
                     <th className="text-left p-2">Source & Campaign</th>
                     <th className="text-left p-2">Behavior</th>
                     <th className="text-left p-2">Status</th>
-                    <th className="text-left p-2">Score</th>
-                    <th className="text-left p-2">Value</th>
-                    <th className="text-left p-2">Actions</th>
                   </tr>
                 </thead>
                 <tbody>
-                  {filteredLeads.map((lead) => (
+                  {currentLeads.map((lead) => (
                   <tr key={lead.id} className="border-b hover:bg-accent/50">
                     <td className="p-2">
                       <div>
@@ -454,7 +516,21 @@ export default function LeadsPage() {
                       </div>
                     </td>
                     <td className="p-2">
-                      <Badge variant="outline">{lead.insuranceType}</Badge>
+                      <Select
+                        value={lead.insuranceType}
+                        onValueChange={(value) => handleInsuranceTypeChange(lead, value)}
+                      >
+                        <SelectTrigger className="w-[140px] h-8">
+                          <SelectValue />
+                        </SelectTrigger>
+                        <SelectContent>
+                          <SelectItem value="Medicare">Medicare</SelectItem>
+                          <SelectItem value="ACA">ACA</SelectItem>
+                          <SelectItem value="Life Insurance">Life Insurance</SelectItem>
+                          <SelectItem value="Health Insurance">Health Insurance</SelectItem>
+                          <SelectItem value="Auto Insurance">Auto Insurance</SelectItem>
+                        </SelectContent>
+                      </Select>
                     </td>
                     <td className="p-2">
                       <div className="space-y-1">
@@ -486,71 +562,25 @@ export default function LeadsPage() {
                     </td>
                     <td className="p-2">
                       <div className="space-y-1">
-                        <Badge 
-                          variant="outline"
-                          className={getStatusBadgeClasses(lead.status)}
+                        <Select
+                          value={lead.status}
+                          onValueChange={(value) => handleStatusChange(lead, value)}
                         >
-                          {lead.status}
-                        </Badge>
+                          <SelectTrigger className="w-[120px] h-8">
+                            <SelectValue />
+                          </SelectTrigger>
+                          <SelectContent>
+                            <SelectItem value="new">New</SelectItem>
+                            <SelectItem value="contacted">Contacted</SelectItem>
+                            <SelectItem value="converted">Converted</SelectItem>
+                          </SelectContent>
+                        </Select>
                         {lead.assignedAgent && (
                           <p className="text-xs text-muted-foreground">{lead.assignedAgent}</p>
                         )}
                         <p className="text-xs text-muted-foreground">
                           {format(new Date(lead.createdAt), 'MMM dd, HH:mm')}
                         </p>
-                      </div>
-                    </td>
-                    <td className="p-2">
-                      {(() => {
-                        const score = getLeadScore(lead);
-                        if (!score) {
-                          return <span className="text-xs text-muted-foreground">No rules</span>;
-                        }
-                        return (
-                          <div className="space-y-1">
-                            <Badge 
-                              variant="outline"
-                              className={getScoreBadgeColor(score.percentage)}
-                            >
-                              {score.percentage}%
-                            </Badge>
-                            <p className="text-xs text-muted-foreground">
-                              {score.score}/{score.maxScore} pts
-                            </p>
-                          </div>
-                        );
-                      })()}
-                    </td>
-                    <td className="p-2">
-                      <p className="font-medium">${lead.estimatedValue}</p>
-                    </td>
-                    <td className="p-2">
-                      <div className="flex gap-1">
-                        {lead.status === 'new' && (
-                          <Button
-                            size="sm"
-                            variant="outline"
-                            onClick={() => handleContact(lead)}
-                          >
-                            <Phone className="h-3 w-3 mr-1" />
-                            Contact
-                          </Button>
-                        )}
-                        {lead.status === 'contacted' && (
-                          <Button
-                            size="sm"
-                            variant="outline"
-                            onClick={() => handleConvert(lead)}
-                          >
-                            <CheckCircle className="h-3 w-3 mr-1" />
-                            Convert
-                          </Button>
-                        )}
-                        {lead.status === 'converted' && (
-                          <Badge variant="outline" className="text-green-500">
-                            ✓ Converted
-                          </Badge>
-                        )}
                       </div>
                     </td>
                   </tr>
@@ -561,6 +591,100 @@ export default function LeadsPage() {
           </div>
         </CardContent>
       </Card>
+
+      {/* Pagination Controls */}
+      {filteredLeads.length > 0 && (
+        <Card>
+          <CardContent className="pt-6">
+            <div className="flex items-center justify-between">
+              <div className="flex items-center gap-2 text-sm text-muted-foreground">
+                <span>
+                  Showing {startIndex + 1} to {Math.min(endIndex, filteredLeads.length)} of {filteredLeads.length} leads
+                </span>
+              </div>
+              
+              <div className="flex items-center gap-4">
+                {/* Items per page selector */}
+                <div className="flex items-center gap-2">
+                  <span className="text-sm text-muted-foreground">Show:</span>
+                  <Select
+                    value={itemsPerPage.toString()}
+                    onValueChange={(value) => {
+                      setItemsPerPage(parseInt(value));
+                      setCurrentPage(1); // Reset to first page when changing page size
+                    }}
+                  >
+                    <SelectTrigger className="w-[70px]">
+                      <SelectValue />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="10">10</SelectItem>
+                      <SelectItem value="20">20</SelectItem>
+                      <SelectItem value="30">30</SelectItem>
+                    </SelectContent>
+                  </Select>
+                </div>
+
+                {/* Page navigation */}
+                <div className="flex items-center gap-2">
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    onClick={() => setCurrentPage(prev => Math.max(prev - 1, 1))}
+                    disabled={currentPage === 1}
+                  >
+                    Previous
+                  </Button>
+                  
+                  <div className="flex items-center gap-1">
+                    {/* Show page numbers */}
+                    {Array.from({ length: Math.min(totalPages, 5) }, (_, i) => {
+                      const pageNumber = Math.max(1, Math.min(totalPages - 4, currentPage - 2)) + i;
+                      if (pageNumber <= totalPages) {
+                        return (
+                          <Button
+                            key={pageNumber}
+                            variant={currentPage === pageNumber ? "default" : "outline"}
+                            size="sm"
+                            onClick={() => setCurrentPage(pageNumber)}
+                            className="w-8 h-8 p-0"
+                          >
+                            {pageNumber}
+                          </Button>
+                        );
+                      }
+                      return null;
+                    })}
+                    
+                    {totalPages > 5 && currentPage < totalPages - 2 && (
+                      <>
+                        <span className="text-muted-foreground">...</span>
+                        <Button
+                          variant="outline"
+                          size="sm"
+                          onClick={() => setCurrentPage(totalPages)}
+                          className="w-8 h-8 p-0"
+                        >
+                          {totalPages}
+                        </Button>
+                      </>
+                    )}
+                  </div>
+                  
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    onClick={() => setCurrentPage(prev => Math.min(prev + 1, totalPages))}
+                    disabled={currentPage === totalPages}
+                  >
+                    Next
+                  </Button>
+                </div>
+              </div>
+            </div>
+          </CardContent>
+        </Card>
+      )}
     </div>
   );
 }

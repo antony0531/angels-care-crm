@@ -253,7 +253,7 @@ export default function LeadSourcesPage() {
       </div>
 
       {/* Summary Cards */}
-      <div className="grid grid-cols-4 gap-4">
+      <div className="grid grid-cols-3 gap-4">
         <Card>
           <CardHeader className="pb-3">
             <CardTitle className="text-sm">Total Leads</CardTitle>
@@ -284,18 +284,6 @@ export default function LeadSourcesPage() {
             <div className="text-2xl font-bold">${(totals.cost / 1000).toFixed(1)}k</div>
             <p className="text-xs text-muted-foreground">
               ${(totals.cost / totals.leads).toFixed(2)} per lead
-            </p>
-          </CardContent>
-        </Card>
-
-        <Card>
-          <CardHeader className="pb-3">
-            <CardTitle className="text-sm">Total Revenue</CardTitle>
-          </CardHeader>
-          <CardContent>
-            <div className="text-2xl font-bold">${(totals.revenue / 1000).toFixed(1)}k</div>
-            <p className="text-xs text-green-500">
-              {((totals.revenue / totals.cost - 1) * 100).toFixed(0)}% ROI
             </p>
           </CardContent>
         </Card>
